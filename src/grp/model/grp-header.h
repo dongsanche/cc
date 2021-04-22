@@ -176,6 +176,7 @@ public:
   {
 	HELLO_MESSAGE = 1,
   CPACK_MESSAGE = 2,
+  CP_MESSAGE=3,
   };
 
   MessageHeader ();
@@ -357,11 +358,89 @@ public:
         uint32_t Deserialize (Buffer::Iterator start, uint32_t messageSize);
         
     };
+    /************************************/
+
+
+    struct CP
+    {
+        uint64_t O_V_ID;
+        uint64_t TIMES;
+        uint32_t F_Jun_ID;
+        uint32_t TO_Jun_ID;
+        uint16_t TN_v=0;
+        uint16_t Lifetime=MAXFLOAT;
+        uint16_t TN_h=1;
+
+        int bsize = 0;
+        int asize = 0;
+
+        int GetBeaconSize() const
+        {
+            return bsize;
+        }
+
+        int GetBeaconAppendSize() const
+        {
+            return asize;
+        }
+
+        std::vector<JunInfo> conlist;
+
+
+        void GetOVID(int m_id)
+        {
+            this->O_V_ID=(uint64_t)m_id;
+        }
+
+        void SetVTime (Time time)
+        {
+	        this->TIMES = SecondsToEmf (time.GetSeconds ());
+        }
+
+        void GetFJID(int JID)
+        {
+            this->F_Jun_ID=(uint32_t)JID;
+        }
+
+        void GetTJID(int JID)
+        {
+            this->TO_Jun_ID=(uint32_t)JID;
+        }
+
+        void SetTNV(int n)
+        {
+            this->TN_v+=(uint16_t)n;
+        }
+
+        void SetLifetime(int t)
+        {
+            if(this->Lifetime<(uint16_t)t)
+            {
+                this->Lifetime=t;
+            }
+        }
+
+        void SetTNH()
+        {
+            this->TN_h++;
+        }
+
+        void Print (std::ostream &os) const;
+        uint32_t GetSerializedSize (void) const;
+        void Serialize (Buffer::Iterator start) const;
+        uint32_t Deserialize (Buffer::Iterator start, uint32_t messageSize);
+        
+    };
+
+
+
+    /*************************************************/
 
 private:
   struct
   {
     Hello hello;
+    CP cp;
   } m_message;
 
 public:
@@ -382,6 +461,25 @@ public:
   {
     NS_ASSERT (m_messageType == HELLO_MESSAGE);
     return m_message.hello;
+  }
+
+    CP& GetCp ()
+  {
+    if (m_messageType == 0)
+      {
+        m_messageType = CP_MESSAGE;
+      }
+    else
+      {
+        NS_ASSERT (m_messageType == CP_MESSAGE);
+      }
+    return m_message.cp;
+  }
+
+  const CP& GetCp () const
+  {
+    NS_ASSERT (m_messageType == CP_MESSAGE);
+    return m_message.cp;
   }
 };
 

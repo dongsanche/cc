@@ -642,6 +642,11 @@ RoutingProtocol::QueueMessage (const grp::MessageHeader &message, Time delay)
     }
 }
 
+int VPC()
+{
+
+}
+
 void
 RoutingProtocol::SendQueuedMessages ()
 {
@@ -740,6 +745,44 @@ RoutingProtocol::SendHello ()
 	{
 		hello.neighborInterfaceAddresses.push_back(iter->first);
 	}
+
+	QueueMessage (msg, JITTER);
+}
+
+void
+RoutingProtocol::SendCP ()
+{
+	NS_LOG_FUNCTION (this);
+
+	grp::MessageHeader msg;
+	Time now = Simulator::Now ();
+
+	msg.SetVTime (GRP_NEIGHB_HOLD_TIME);
+	msg.SetOriginatorAddress (m_mainAddress);
+	msg.SetTimeToLive (1);
+	msg.SetHopCount (0);
+	msg.SetMessageSequenceNumber (GetMessageSequenceNumber ());
+	grp::MessageHeader::CP &cp = msg.GetCp();
+    Ptr<MobilityModel> MM = m_ipv4->GetObject<MobilityModel> ();
+	if(m_JunAreaTag)
+    {
+        cp.GetOVID(m_id);
+        cp.SetVTime(GRP_NEIGHB_HOLD_TIME);
+        cp.GetFJID(m_currentJID);
+        cp.GetTJID(m_nextJID);
+        cp.SetTNV(m_neiTable.size());
+        cp.SetLifetime(VPC());
+        cp.SetTNH();
+    }
+    else{
+        cp.GetOVID(AddrToID(msg.GetOriginatorAddress()));
+        cp.SetVTime(GRP_NEIGHB_HOLD_TIME);
+        cp.GetFJID(m_currentJID);
+        cp.GetTJID(m_nextJID);
+        cp.SetTNV(m_neiTable.size());
+        cp.SetLifetime(VPC());
+        cp.SetTNH();
+    }
 
 	QueueMessage (msg, JITTER);
 }

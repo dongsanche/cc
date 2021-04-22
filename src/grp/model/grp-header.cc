@@ -458,5 +458,114 @@ MessageHeader::Hello::Deserialize (Buffer::Iterator start, uint32_t messageSize)
     return GetSerializedSize ();
 }
 
+
+
+/*****************************CP message***************/
+//uint32_t
+// MessageHeader::CP::GetSerializedSize (void) const
+// {
+//     uint32_t size = 28;
+//     size += this->neighborInterfaceAddresses.size () * IPV4_ADDRESS_SIZE;
+//     size += this->conlist.size();
+
+//     for(std::vector<JunInfo>::const_iterator itr = this->conlist.begin(); itr != this->conlist.end(); itr++)
+//     {
+//         size += 6 + itr->list.size();
+//     }
+    
+//     return size;
+// }
+
+void
+MessageHeader::CP::Print (std::ostream &os) const
+{
+}
+
+void
+MessageHeader::CP::Serialize (Buffer::Iterator start) const
+{
+    Buffer::Iterator i = start;
+
+    i.WriteU64 (this->O_V_ID);
+    i.WriteU64 (this->TIMES);
+    i.WriteU32 (this->F_Jun_ID);
+    i.WriteU32 (this->TO_Jun_ID);
+    i.WriteU16 (this->TN_v);
+    i.WriteU16 (this->Lifetime);
+    i.WriteU16 (this->TN_h);
+
+    //i.WriteU8 ((uint8_t)this->conlist.size());
+
+    // int lsize = 0;
+    // for(std::vector<JunInfo>::const_iterator itr = this->conlist.begin(); itr != this->conlist.end(); itr++)
+    // {
+    //     lsize += 6 + itr->list.size();
+    // }
+    // i.WriteU8 (lsize);
+
+    // for (std::vector<Ipv4Address>::const_iterator iter = this->neighborInterfaceAddresses.begin ();
+    //    iter != this->neighborInterfaceAddresses.end (); iter++)
+    // {
+    //     i.WriteU32 (iter->Get ());
+    // }
+
+    // for(std::vector<JunInfo>::const_iterator itr = this->conlist.begin(); itr != this->conlist.end(); itr++)
+    // {
+    //     i.WriteU8 (itr->jid);
+    //     i.WriteU32 ((uint32_t)(itr->version));
+    //     i.WriteU8 ((uint8_t)itr->list.size());
+    //     for(std::vector<int>::const_iterator li = itr->list.begin(); li != itr->list.end(); li ++)
+    //     {
+    //         i.WriteU8 (*li);
+    //     }
+    // }
+}
+
+uint32_t
+MessageHeader::CP::Deserialize (Buffer::Iterator start, uint32_t messageSize)
+{
+    Buffer::Iterator i = start;
+    int basesize = 30;
+
+    //this->neighborInterfaceAddresses.clear ();
+    this->O_V_ID = i.ReadU64 ();
+    this->TIMES = i.ReadU64 ();
+    this->F_Jun_ID = i.ReadU32 ();
+    this->TO_Jun_ID = i.ReadU32 ();
+    this->TN_v = i.ReadU16 ();
+    this->Lifetime = i.ReadU16 ();
+    this->TN_h = i.ReadU16 ();
+    
+    // int num = i.ReadU8 ();
+    // int listsize = i.ReadU8 ();
+
+    // int numAddresses = (messageSize - basesize - listsize) / IPV4_ADDRESS_SIZE;
+    // this->neighborInterfaceAddresses.erase (this->neighborInterfaceAddresses.begin (),
+    //                                 this->neighborInterfaceAddresses.end ());
+    // for (int n = 0; n < numAddresses; ++n)
+    // {
+    //     this->neighborInterfaceAddresses.push_back (Ipv4Address (i.ReadU32 ()));
+    // }
+
+    // this->conlist.erase(this->conlist.begin(), this->conlist.end());
+    // for(int n = 0; n < num; ++n)
+    // {
+    //     JunInfo info;
+    //     info.jid = i.ReadU8();
+    //     info.version = (int)i.ReadU32();
+    //     int size = i.ReadU8();
+    //     for(int k = 0; k < size; k++)
+    //     {
+    //         info.list.push_back(i.ReadU8());
+    //     }
+    //     this->conlist.push_back(info);
+    // }
+
+    // this->bsize = messageSize;
+    // this->asize = messageSize - basesize - this->neighborInterfaceAddresses.size() * IPV4_ADDRESS_SIZE;
+
+    return basesize;
+}
+
 }
 }

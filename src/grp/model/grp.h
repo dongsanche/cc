@@ -116,6 +116,7 @@ struct SendingQueue
 };
 namespace grp {
 
+
 struct NeighborTableEntry
 {
     int N_turn;
@@ -205,6 +206,7 @@ private:
     double PositionCheckThreshold = 11;
     double RoadWidth = 10;
     double JunAreaRadius = 50;
+    int TN_J=100;                         //所有路口数量
     std::string confile = "scratch/conf.txt";
 /*------------------------------------------------------------------------------------------*/
 
@@ -232,7 +234,9 @@ private:
     std::vector<PacketQueueEntry> m_pwaitqueue;	
     std::vector<DelayPacketQueueEntry> m_delayqueue;	
     std::vector<DigitalMapEntry> m_map;
-
+    //template <typename T>
+    std::vector<std::vector<int>> scores(int TN_J,std::vector<int>(int TN_J));  //路段得分
+    
 /*------------------------------------------------------------------------------------------*/
     //从配置文件读取实验运行参数
     void ReadConfiguration();
@@ -253,6 +257,8 @@ private:
     int GetDirection(int currentJID, int nextJID);
     //获取车辆的坐标信息
     Vector GetPosition(Ipv4Address adr); 
+    //计算链接持续时间
+    int VPC();
 
 /*------------------------------------------------------------------------------------------*/
 //设置协议所需的定时器
@@ -283,6 +289,10 @@ private:
     //收到控制包时的处理逻辑，控制包包括HelloMessage，即Beacon
     void RecvGrp (Ptr<Socket> socket);
 
+    //CP机制处理逻辑
+    void SendCP ();
+    void ProcessCP (const grp::MessageHeader &msg, const Ipv4Address receiverIfaceAddr, const Ipv4Address senderIface);
+    
     //Beacon机制处理逻辑
     void SendHello ();
     void ProcessHello (const grp::MessageHeader &msg, const Ipv4Address receiverIfaceAddr, const Ipv4Address senderIface);
