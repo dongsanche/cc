@@ -206,14 +206,14 @@ private:
     double PositionCheckThreshold = 11;
     double RoadWidth = 10;
     double JunAreaRadius = 50;
-    int TN_J=100;                         //所有路口数量
+                            
     std::string confile = "scratch/conf.txt";
 /*------------------------------------------------------------------------------------------*/
 
 
     int m_id = -1;
     int vnum = 0;
-    int m_turn = -1;
+    int m_turn = -1;   //朝向路口
     int m_nextJID = -1;
     int m_currentJID = -1;
     int m_direction = -1;
@@ -225,6 +225,7 @@ private:
     double InsightTransRange = -1;
     double CarryTimeThreshold = -1;
     
+    
     QMap m_wTimeCache;
     std::queue<int> m_jqueue;
     std::queue<int> m_trailTrace;
@@ -235,6 +236,15 @@ private:
     std::vector<DelayPacketQueueEntry> m_delayqueue;	
     std::vector<DigitalMapEntry> m_map;
     //template <typename T>
+
+
+
+
+/***************************cp包信息*********************************************/
+
+    int cp_currentJID=-1;
+    int cp_nextJID=-1;
+    int lifetime=INT_MAX; //生存时间
     std::vector<std::vector<int>> scores(int TN_J,std::vector<int>(int TN_J));  //路段得分
     
 /*------------------------------------------------------------------------------------------*/
@@ -258,7 +268,7 @@ private:
     //获取车辆的坐标信息
     Vector GetPosition(Ipv4Address adr); 
     //计算链接持续时间
-    int VPC();
+    void VPC();
 
 /*------------------------------------------------------------------------------------------*/
 //设置协议所需的定时器
@@ -277,6 +287,10 @@ private:
     int GetPacketNextJID(bool tag);
     //路段内路由，数据包在路段内传播时的路由方法，即如何再路段内挑选数据包的下一跳  
     Ipv4Address IntraPathRouting(Ipv4Address dest, int dstjid);
+
+    Ipv4Address NextHop(Ipv4Address dest, int dstjid);
+
+    int GetNextJID(bool tag);
 
     //路段间路由采用迪杰斯特拉最短路径算法计算最优的下一路由路段
     int DijkstraAlgorithm(int srcjid, int dstjid);

@@ -368,8 +368,9 @@ public:
         uint32_t F_Jun_ID;
         uint32_t TO_Jun_ID;
         uint16_t TN_v=0;
-        uint16_t Lifetime=MAXFLOAT;
+        uint16_t Lifetime;
         uint16_t TN_h=1;
+        uint32_t direction;
 
         int bsize = 0;
         int asize = 0;
@@ -377,6 +378,11 @@ public:
         int GetBeaconSize() const
         {
             return bsize;
+        }
+
+        uint32_t GetDirection() const
+        {
+        return this->direction;
         }
 
         int GetBeaconAppendSize() const
@@ -387,9 +393,14 @@ public:
         std::vector<JunInfo> conlist;
 
 
-        void GetOVID(int m_id)
+        void SetOVID(int m_id)
         {
             this->O_V_ID=(uint64_t)m_id;
+        }
+
+        double GetOVID()
+        {
+            return this->O_V_ID;
         }
 
         void SetVTime (Time time)
@@ -397,14 +408,24 @@ public:
 	        this->TIMES = SecondsToEmf (time.GetSeconds ());
         }
 
-        void GetFJID(int JID)
+        void SetFJID(int JID)
         {
             this->F_Jun_ID=(uint32_t)JID;
         }
 
-        void GetTJID(int JID)
+        double GetFJID()
+        {
+            return this->F_Jun_ID;
+        }
+
+        void SetTJID(int JID)
         {
             this->TO_Jun_ID=(uint32_t)JID;
+        }
+
+        double GetTJID() const
+        {
+            return (double)this->TO_Jun_ID;
         }
 
         void SetTNV(int n)
@@ -418,6 +439,11 @@ public:
             {
                 this->Lifetime=t;
             }
+        }
+
+        double GetLifetime()
+        {
+            return this->Lifetime;
         }
 
         void SetTNH()

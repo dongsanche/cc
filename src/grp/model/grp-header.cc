@@ -493,6 +493,7 @@ MessageHeader::CP::Serialize (Buffer::Iterator start) const
     i.WriteU16 (this->TN_v);
     i.WriteU16 (this->Lifetime);
     i.WriteU16 (this->TN_h);
+    i.WriteU32 (this->direction);
 
     //i.WriteU8 ((uint8_t)this->conlist.size());
 
@@ -525,7 +526,7 @@ uint32_t
 MessageHeader::CP::Deserialize (Buffer::Iterator start, uint32_t messageSize)
 {
     Buffer::Iterator i = start;
-    int basesize = 30;
+    int basesize = 34;
 
     //this->neighborInterfaceAddresses.clear ();
     this->O_V_ID = i.ReadU64 ();
@@ -535,6 +536,7 @@ MessageHeader::CP::Deserialize (Buffer::Iterator start, uint32_t messageSize)
     this->TN_v = i.ReadU16 ();
     this->Lifetime = i.ReadU16 ();
     this->TN_h = i.ReadU16 ();
+    this->direction = i.ReadU32 ();
     
     // int num = i.ReadU8 ();
     // int listsize = i.ReadU8 ();
