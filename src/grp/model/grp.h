@@ -1,7 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 #ifndef GRP_H
 #define GRP_H
-
+#include <climits>
 #include "grp-header.h"
 #include "ns3/object.h"
 #include "ns3/packet.h"
@@ -237,7 +237,16 @@ private:
     std::vector<DigitalMapEntry> m_map;
     //template <typename T>
 
-
+/*************************配置信息***************************************/
+     double a1=0.333;
+     double a2=0.333;
+     double a3=0.333;
+     double Ncon=6;
+     double T=0.0003;
+     double Tmax=0.0006;
+     double C=2*Tmax;
+     double b1=0.5;
+     double b2=0.5;
 
 
 /***************************cp包信息*********************************************/
@@ -245,6 +254,8 @@ private:
     int cp_currentJID=-1;
     int cp_nextJID=-1;
     int lifetime=INT_MAX; //生存时间
+    // int NTOTAL=0;  //总车辆数
+    // int NH=0;       //总跳数
     std::vector<std::vector<int>> scores(int TN_J,std::vector<int>(int TN_J));  //路段得分
     
 /*------------------------------------------------------------------------------------------*/
@@ -268,8 +279,10 @@ private:
     //获取车辆的坐标信息
     Vector GetPosition(Ipv4Address adr); 
     //计算链接持续时间
-    void VPC();
+    double VPC();
 
+    //计算道路得分
+    double RSE(const grp::MessageHeader &msg);
 /*------------------------------------------------------------------------------------------*/
 //设置协议所需的定时器
     //用以定时发送Beacon

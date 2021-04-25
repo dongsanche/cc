@@ -367,10 +367,9 @@ public:
         uint64_t TIMES;
         uint32_t F_Jun_ID;
         uint32_t TO_Jun_ID;
-        uint16_t TN_v=0;
-        uint16_t Lifetime;
-        uint16_t TN_h=1;
-        uint32_t direction;
+        uint32_t TN_v=0;
+        uint32_t Lifetime;
+        uint32_t TN_h=1;
 
         int bsize = 0;
         int asize = 0;
@@ -380,10 +379,6 @@ public:
             return bsize;
         }
 
-        uint32_t GetDirection() const
-        {
-        return this->direction;
-        }
 
         int GetBeaconAppendSize() const
         {
@@ -407,6 +402,12 @@ public:
         {
 	        this->TIMES = SecondsToEmf (time.GetSeconds ());
         }
+
+        Time GetVTime () const
+        {
+	        return Seconds (EmfToSeconds (TIMES));
+        }
+
 
         void SetFJID(int JID)
         {
@@ -443,12 +444,23 @@ public:
 
         double GetLifetime()
         {
-            return this->Lifetime;
+            return (double)this->Lifetime;
         }
 
         void SetTNH()
         {
             this->TN_h++;
+        }
+
+        int GetTNH() const
+        {
+            return TN_h;
+        }
+
+
+        int GetTNV() const
+        {
+            return TN_v;
         }
 
         void Print (std::ostream &os) const;

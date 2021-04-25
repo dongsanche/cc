@@ -639,7 +639,6 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
     Ipv4Address nexthop=NextHop(originatorAddress,nextjid);
 
     VPC();
-    SendCP();
 
 	Simulator::Schedule(GRP_NEIGHB_HOLD_TIME, &RoutingProtocol::NeiTableCheckExpire, this, originatorAddress);
 
@@ -649,6 +648,25 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
  	}
 
 }
+/*
+
+
+
+*/
+double 
+RoutingProtocol::RSE(const grp::MessageHeader &msg)
+{
+    const grp::MessageHeader::CP &cp = msg.GetCp ();
+    double NTOTAL=cp.GetTNV();
+    double NH=cp.GetTNH();
+    if(NTOTAL/NH<1)
+        double Qab=a1*NTOTAL/NH+a2*T/(SecondsToEmf (GRP_NEIGHB_HOLD_TIME.GetSeconds ())-cp.GetVTime().GetSeconds())+a3*(2/cp.GetTNH());
+    else
+        double Qab=a1+a2*T/(SecondsToEmf (GRP_NEIGHB_HOLD_TIME.GetSeconds ())-cp.GetVTime().GetSeconds())+a3*(2/cp.GetTNH());
+
+}
+
+
 
 int 
 RoutingProtocol::AddrToID(Ipv4Address addr)
@@ -669,7 +687,7 @@ RoutingProtocol::QueueMessage (const grp::MessageHeader &message, Time delay)
 }
 
 
-void 
+double 
 RoutingProtocol:: VPC()
 {
     Ipv4Address nexthop=NextHop(m_mainAddress,m_nextJID);
@@ -743,6 +761,7 @@ RoutingProtocol:: VPC()
     {
         lifetime=t;
     }
+    return lifetime;
 }
 
 void
@@ -900,7 +919,6 @@ RoutingProtocol::SendHello ()
 	}
 
 	QueueMessage (msg, JITTER);
-    std::cout<<"ssssssssssssssssss"<<m_turn<<std::endl;
 }
 
 void
@@ -918,27 +936,22 @@ RoutingProtocol::SendCP ()
 	msg.SetMessageSequenceNumber (GetMessageSequenceNumber ());
 	grp::MessageHeader::CP &cp = msg.GetCp();
     Ptr<MobilityModel> MM = m_ipv4->GetObject<MobilityModel> ();
-	if(m_JunAreaTag)
+    if(m_JunAreaTag==true)
     {
         cp.SetOVID(m_id);
         cp.SetVTime(GRP_NEIGHB_HOLD_TIME);
-        cp.SetFJID(m_currentJID);
-        cp.SetTJID(m_nextJID);
-        cp.SetTNV(m_neiTable.size());
-        //cp.SetLifetime(VPC());
-        cp.SetTNH();
     }
-    else{
-        cp.SetOVID(AddrToID(msg.GetOriginatorAddress()));
-        cp.SetVTime(GRP_NEIGHB_HOLD_TIME);
-        cp.SetFJID(m_currentJID);
-        cp.SetTJID(m_nextJID);
-        cp.SetTNV(m_neiTable.size());
-        //cp.SetLifetime(VPC());
-        cp.SetTNH();
-    }
-
-	QueueMessage (msg, JITTER);
+    cp.SetFJID(m_currentJID);
+    cp.SetTJID(m_nextJID);
+    cp.SetTNV(m_neiTable.size());
+    cp.SetLifetime((uint16_t)VPC());
+    cp.SetTNH();
+	//QueueMessage (msg, JITTER);
+    Ptr<Packet> packet = Create<Packet> ();
+    Ptr<Packet> p = Create<Packet> ();
+    p->AddHeader (msg);
+    packet->AddAtEnd (p);
+    SendPacket (packet);
 }
 
 uint16_t RoutingProtocol::GetPacketSequenceNumber ()
