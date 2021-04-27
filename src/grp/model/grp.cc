@@ -630,16 +630,19 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
 							   const Ipv4Address receiverIfaceAddr,
                                const Ipv4Address senderIface)
 {
-	//const grp::MessageHeader::CP &cp = msg.GetCp ();
+	const grp::MessageHeader::CP &cp = msg.GetCp ();
 
     //double nextjid = cp.GetTJID();
 
 	Ipv4Address originatorAddress = msg.GetOriginatorAddress();
 	
     //Ipv4Address nexthop=NextHop(originatorAddress,nextjid);
-
-    VPC();
-
+    if(cp.GetLifetime()>VPC())
+    {
+        lifetime=VPC();
+    }
+    //VPC();
+    SendCP();
 	Simulator::Schedule(GRP_NEIGHB_HOLD_TIME, &RoutingProtocol::NeiTableCheckExpire, this, originatorAddress);
 
     if(m_pwaitqueue.empty() == false)
@@ -759,10 +762,10 @@ RoutingProtocol:: VPC()
             t=(sqrt(pow(cx-vnx, 2) + pow(cy-vny, 2)))/ivn->second.N_speed;
         }
     }
-    if(t<lifetime)
-    {
-        lifetime=t;
-    }
+    // if(t<lifetime)
+    // {
+    //     lifetime=t;
+    // }
     return lifetime;
 }
 
@@ -946,7 +949,7 @@ RoutingProtocol::SendCP ()
     cp.SetFJID(m_currentJID);
     cp.SetTJID(m_nextJID);
     cp.SetTNV(m_neiTable.size());
-    cp.SetLifetime((uint16_t)VPC());
+    cp.SetLifetime((uint16_t)lifetime);
     cp.SetTNH();
 	//QueueMessage (msg, JITTER);
     Ptr<Packet> packet = Create<Packet> ();
