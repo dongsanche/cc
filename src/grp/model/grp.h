@@ -256,7 +256,7 @@ private:
     int lifetime=INT_MAX; //生存时间
     // int NTOTAL=0;  //总车辆数
     // int NH=0;       //总跳数
-    std::vector<std::vector<int>> scores(int TN_J,std::vector<int>(int TN_J));  //路段得分
+    std::vector<std::vector<int>> scores;  //路段得分
     
 /*------------------------------------------------------------------------------------------*/
     //从配置文件读取实验运行参数
@@ -282,7 +282,7 @@ private:
     double VPC();
 
     //计算道路得分
-    double RSE(const grp::MessageHeader &msg);
+    void RSE(const grp::MessageHeader &msg);
 /*------------------------------------------------------------------------------------------*/
 //设置协议所需的定时器
     //用以定时发送Beacon
