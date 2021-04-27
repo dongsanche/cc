@@ -442,7 +442,7 @@ public:
             }
         }
 
-        double GetLifetime()
+        double GetLifetime() const
         {
             return (double)this->Lifetime;
         }
