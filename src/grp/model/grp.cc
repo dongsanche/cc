@@ -507,7 +507,9 @@ RoutingProtocol::CheckPacketQueue()
                 nextjid = GetNearestJID();
             }
         }
+        std::cout<<nextjid<<" "<<"xxxxxxxxxSS"<<std::endl;
         nextHop = IntraPathRouting(dest, nextjid);
+        
 
         DataPacketHeader.SetNextJID(nextjid);
         qentry.m_packet->AddHeader (DataPacketHeader);
@@ -639,16 +641,17 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
     //Ipv4Address nexthop=NextHop(originatorAddress,nextjid);
     if(cp.GetLifetime()>VPC())
     {
-        lifetime=VPC();
+        lifetime[m_nextJID][m_currentJID]=VPC();
+        lifetime[m_currentJID][m_nextJID]=lifetime[m_nextJID][m_currentJID];
     }
     //VPC();
     SendCP();
 	Simulator::Schedule(GRP_NEIGHB_HOLD_TIME, &RoutingProtocol::NeiTableCheckExpire, this, originatorAddress);
 
-    if(m_pwaitqueue.empty() == false)
- 	{
- 		CheckPacketQueue();
- 	}
+    // if(m_pwaitqueue.empty() == false)
+ 	// {
+ 	// 	CheckPacketQueue();
+ 	// }
 
 }
 /*
@@ -695,7 +698,12 @@ RoutingProtocol::QueueMessage (const grp::MessageHeader &message, Time delay)
 double 
 RoutingProtocol:: VPC()
 {
-    Ipv4Address nexthop=NextHop(m_mainAddress,m_nextJID);
+    Ipv4Address nexthop;
+    if(m_nextJID>=0)
+    {
+        nexthop=IntraPathRouting(m_mainAddress,m_nextJID);
+        std::cout<<m_nextJID<<" "<<"sSSSSSSSS"<<std::endl;
+    }
     double t=0;   //持续时间
     std::map<Ipv4Address, NeighborTableEntry>::const_iterator itr = m_neiTable.find (nexthop);
     Ipv4Address vn,vp;
@@ -762,11 +770,12 @@ RoutingProtocol:: VPC()
             t=(sqrt(pow(cx-vnx, 2) + pow(cy-vny, 2)))/ivn->second.N_speed;
         }
     }
-    // if(t<lifetime)
-    // {
-    //     lifetime=t;
-    // }
-    return lifetime;
+    if(t<lifetime[m_currentJID][m_nextJID])
+    {
+        lifetime[m_currentJID][m_nextJID]=t;
+        lifetime[m_nextJID][m_currentJID]=lifetime[m_currentJID][m_nextJID];
+    }
+    return lifetime[m_currentJID][m_nextJID];
 }
 
 void
@@ -820,7 +829,7 @@ RoutingProtocol::SendPacket (Ptr<Packet> packet)
       Ipv4Address bcast = i->second.GetLocal ().GetSubnetDirectedBroadcast (i->second.GetMask ());
       i->first->SendTo (pkt, 0, InetSocketAddress (bcast, GRP_PORT_NUMBER));
     }
-    std::cout<<"ssssssssssssssssss"<<m_turn<<std::endl;
+    //std::cout<<"ssssssssssssssssss"<<m_turn<<std::endl;
 }
 
 int 
@@ -949,7 +958,7 @@ RoutingProtocol::SendCP ()
     cp.SetFJID(m_currentJID);
     cp.SetTJID(m_nextJID);
     cp.SetTNV(m_neiTable.size());
-    cp.SetLifetime((uint16_t)lifetime);
+    cp.SetLifetime((uint16_t)lifetime[m_nextJID][m_currentJID]);
     cp.SetTNH();
 	//QueueMessage (msg, JITTER);
     Ptr<Packet> packet = Create<Packet> ();
@@ -976,6 +985,27 @@ RoutingProtocol::HelloTimerExpire ()
 {
   SendHello ();
   m_helloTimer.Schedule (m_helloInterval);
+}
+
+
+void
+RoutingProtocol::CpTimerExpire ()
+{
+    if(m_JunAreaTag)
+    {
+        for(int i=0;i<m_JuncNum;i++)
+        {
+            if(isAdjacentVex(m_currentJID,i))
+            {
+                double p=exp((C-lifetime[m_currentJID][m_nextJID])/2);
+                srand((unsigned)time(NULL));
+                double temp=rand() / RAND_MAX;
+                if(temp<p)
+                    SendCP();
+            }
+        } 
+    }
+    //m_helloTimer.Schedule (m_helloInterval);
 }
 
 void
@@ -1297,6 +1327,7 @@ RoutingProtocol::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDe
 
     Ipv4Address loopback ("127.0.0.1");
     nextHop = IntraPathRouting(dest, dstjid);
+    std::cout<<m_nextJID<<" "<<"llllllllllSSS"<<std::endl;
     if(nextHop == loopback || nextHop == dest || m_JunAreaTag == true)
     {
         rtentry = Create<Ipv4Route> ();
@@ -1624,8 +1655,8 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
     }
 
     //路段内路由，为数据包选定下一跳节点
-	Ipv4Address nextHop = NextHop(dest, nextjid);
-
+	Ipv4Address nextHop = IntraPathRouting(dest, nextjid);
+    std::cout<<m_nextJID<<" "<<"ttttttttttSSSSSS"<<std::endl;
 	NS_LOG_UNCOND("" << Simulator::Now().GetSeconds() << " " << m_id << "->" << AddrToID(nextHop));
 
 	if (nextHop != loopback)
