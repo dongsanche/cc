@@ -253,10 +253,12 @@ private:
 
     int cp_currentJID=-1;
     int cp_nextJID=-1;
-    int lifetime=INT_MAX; //生存时间
+    int lifetime[49][49]={INT32_MAX}; //生存时间
     // int NTOTAL=0;  //总车辆数
     // int NH=0;       //总跳数
-    std::vector<std::vector<int>> scores(int TN_J,std::vector<int>(int TN_J));  //路段得分
+    int scores[49][49];  //路段得分
+    int cp_mid=-1;       //初始节点
+    Time cp_time;      //初始时间
     
 /*------------------------------------------------------------------------------------------*/
     //从配置文件读取实验运行参数
@@ -282,11 +284,13 @@ private:
     double VPC();
 
     //计算道路得分
-    double RSE(const grp::MessageHeader &msg);
+    void RSE(const grp::MessageHeader &msg);
 /*------------------------------------------------------------------------------------------*/
 //设置协议所需的定时器
     //用以定时发送Beacon
     void HelloTimerExpire ();
+    // 设置发送cp包的情况
+    void CpTimerExpire ();
     //用以周期性计算当前车辆的实时速度
     void SpeedCheckExpire();
     //用以判断车辆当前在路网中的状态，是位于路段中还是位于路口范围内
