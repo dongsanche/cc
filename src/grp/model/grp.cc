@@ -954,8 +954,17 @@ RoutingProtocol::SendCP ()
     {
         cp.SetOVID(m_id);
         cp.SetVTime(GRP_NEIGHB_HOLD_TIME);
+        cp_mid=cp.GetOVID();
+        cp_time=GRP_NEIGHB_HOLD_TIME;
+    }
+    else
+    {
+        cp.SetOVID(m_id);
+        cp.SetVTime(cp_time);
     }
     cp.SetFJID(m_currentJID);
+    m_nextJID=GetPacketNextJID(true);
+    cp.SetTJID(m_nextJID);
     cp.SetTJID(m_nextJID);
     cp.SetTNV(m_neiTable.size());
     cp.SetLifetime((uint16_t)lifetime[m_nextJID][m_currentJID]);
@@ -1200,7 +1209,7 @@ RoutingProtocol::IntraPathRouting(Ipv4Address dest,  int dstjid)
 	double curDisToDst = sqrt(pow(cx-dx, 2) + pow(cy-dy, 2));
 	if(curDisToDst < RSSIDistanceThreshold)
 		return dest;
-
+    std::cout<<dstjid<<"fffffffffffff"<<std::endl;
     double jx = m_map[dstjid].x;
 	double jy = m_map[dstjid].y;
 	double mindis = sqrt(pow(cx-jx, 2) + pow(cy-jy, 2));
@@ -1318,6 +1327,7 @@ RoutingProtocol::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDe
     int dstjid;
     if(m_JunAreaTag == false)
     {
+        std::cout<<m_currentJID<<std::endl;
         dstjid = pow(cx-cjx, 2) + pow(cy-cjy, 2) < pow(cx-njx, 2) + pow(cy-njy, 2)? m_currentJID:m_nextJID;
     }
     else
@@ -1326,6 +1336,7 @@ RoutingProtocol::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDe
     }
 
     Ipv4Address loopback ("127.0.0.1");
+    std::cout<<dstjid<<"   out"<<std::endl;
     nextHop = IntraPathRouting(dest, dstjid);
     std::cout<<m_nextJID<<" "<<"llllllllllSSS"<<std::endl;
     if(nextHop == loopback || nextHop == dest || m_JunAreaTag == true)
@@ -1421,8 +1432,11 @@ RoutingProtocol::DijkstraAlgorithm(int srcjid, int dstjid)
 int
 RoutingProtocol::GetPacketNextJID(bool tag)
 {
-    int nextjid;
-    int maxx=0;
+    int cjid = GetNearestJID();
+    if(cjid == m_rsujid)
+        return cjid;
+    int nextjid = -1;
+    int maxx=-10000000;
     for(int i = 0; i < m_JuncNum; i++)
     {
 
@@ -1432,7 +1446,10 @@ RoutingProtocol::GetPacketNextJID(bool tag)
             double njy=m_map[m_currentJID].y;
             double nextjx=m_map[i].x;
             double nextjy=m_map[i].y;
-            double temp=b1*(1-sqrt(pow(nextjx-GetPosition(m_mainAddress).x, 2)+pow(nextjy-GetPosition(m_mainAddress).y, 2))/sqrt(pow(njx-GetPosition(m_mainAddress).x, 2)+pow(njy-GetPosition(m_mainAddress).y, 2)));
+            double temp=b1*(1-sqrt(pow(nextjx-m_map[m_rsujid].x, 2)+pow(nextjy-m_map[m_rsujid].y, 2))/sqrt(pow(njx-m_map[m_rsujid].x, 2)+pow(njy-m_map[m_rsujid].y, 2)))+b2*scores[i][m_currentJID];
+            std::cout<<temp<<"    权值"<<std::endl;
+            std::cout<<sqrt(pow(nextjx-m_map[m_rsujid].x, 2)+pow(nextjy-m_map[m_rsujid].y, 2))<<"    j距离"<<std::endl;
+            std::cout<<sqrt(pow(njx-m_map[m_rsujid].x, 2)+pow(njy-m_map[m_rsujid].y, 2))<<"    i距离"<<std::endl;
             if(temp>maxx)
             {
                 maxx=temp;
@@ -1655,8 +1672,9 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
     }
 
     //路段内路由，为数据包选定下一跳节点
+    std::cout<<nextjid<<" "<<"ttttttttttSSSSSS"<<std::endl;
 	Ipv4Address nextHop = IntraPathRouting(dest, nextjid);
-    std::cout<<m_nextJID<<" "<<"ttttttttttSSSSSS"<<std::endl;
+    
 	NS_LOG_UNCOND("" << Simulator::Now().GetSeconds() << " " << m_id << "->" << AddrToID(nextHop));
 
 	if (nextHop != loopback)
