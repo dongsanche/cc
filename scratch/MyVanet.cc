@@ -29,6 +29,7 @@
 #include <ctime>
 
 using namespace ns3;
+using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("MyFirstNS3");
 
@@ -567,10 +568,10 @@ int main (int argc, char *argv[])
 	}
 
     //打印统计数据
-    NS_LOG_UNCOND("Simulation results");
-    NS_LOG_UNCOND("Sent:"<< SendCount << " Received:" << recount 
-		<< " Drop:" << DropCount << " delay:" << (double)allTime/recount/1000000 << "ms");
-    NS_LOG_UNCOND("Store Error: " << lc - DropCount);
+    cout << "Simulation results";
+    cout << "Sent:"<< SendCount << " Received:" << recount 
+		<< " Drop:" << DropCount << " delay:" << (double)allTime/recount/1000000 << "ms";
+    cout << "Store Error: " << lc - DropCount << endl;
 
     //将统计数据输出到文件中
     std::ofstream fout("scratch/data.csv", std::ios::app);
