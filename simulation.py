@@ -42,13 +42,13 @@ for i in range(testnum):
         ofile.close()
         if c >= idx:
             sfile = open("scratch/conf.txt",'w')
-            sfile.write("idx=" + str(idx) + "\r\nvnum=600\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" + str(k))
+            sfile.write("idx=" + str(idx) + "\r\nvnum=200\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" + str(k))
             sfile.close()
 
             os.system("./waf --run scratch/MyVanet")
 
             sfile = open("scratch/conf.txt",'w')
-            sfile.write("idx=" + str(idx + 1) + "\r\nvnum=600\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" +str(k))
+            sfile.write("idx=" + str(idx + 1) + "\r\nvnum=200\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" +str(k))
             sfile.close()
 
         c += 1
