@@ -30,29 +30,29 @@ import os
 # sfile.close()
 
 k = 500
-testnum = 12
+testnum = 7
 runtimes = 10
 steplen = 500
+max=6000
 
 c = 0
-for i in range(testnum):
-    for j in range(runtimes):
-        ofile = open("scratch/conf.txt",'r')
-        idx = int(ofile.readline().split('=')[1])
-        ofile.close()
-        if c >= idx:
-            sfile = open("scratch/conf.txt",'w')
-            sfile.write("idx=" + str(idx) + "\r\nvnum=200\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" + str(k))
-            sfile.close()
+for k in range(max):
+    for i in range(testnum):
+        for j in range(runtimes):
+            ofile = open("scratch/conf.txt",'r')
+            idx = int(ofile.readline().split('=')[1])
+            ofile.close()
+            if c >= idx:
+                sfile = open("scratch/conf.txt",'w')
+                sfile.write("idx=" + str(idx) + "\r\nvnum=600\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" + str(k))
+                sfile.close()
+                os.system("./waf --run scratch/MyVanet")
+                sfile = open("scratch/conf.txt",'w')
+                sfile.write("idx=" + str(idx + 1) + "\r\nvnum=600\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" +str(k))
+                sfile.close()
+            c += 1
+k += steplen
 
-            os.system("./waf --run scratch/MyVanet")
-
-            sfile = open("scratch/conf.txt",'w')
-            sfile.write("idx=" + str(idx + 1) + "\r\nvnum=200\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" +str(k))
-            sfile.close()
-
-        c += 1
-    k += steplen
 
 sfile = open("scratch/conf.txt",'w')
 sfile.write("idx=0\r\nvnum=600\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=1000")
