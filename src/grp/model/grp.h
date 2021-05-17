@@ -22,7 +22,7 @@
 #include "ns3/digitalMap.h"
 #include "ns3/myserver.h"
 
-
+extern double sum;     //控制包数量
 namespace ns3 {
 
 struct PacketQueueEntry
@@ -247,6 +247,7 @@ private:
      double C=2*Tmax;
      double b1=0.5;
      double b2=0.5;
+
 
 
 /***************************cp包信息*********************************************/

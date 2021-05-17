@@ -37,9 +37,9 @@ steplen = 500
 max=6000
 
 c = 0
-for k in range(100,900,100):
+for k in range(500,6500,500):
     sfile = open("scratch/conf.txt",'w')
-    sfile.write("idx=" + str(1) + "\r\nvnum="+str(k)+"\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=3000")
+    sfile.write("idx=" + str(1) + "\r\nvnum=600\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" +str(k))
     sfile.close()
     #for i in range(testnum):
     for j in range(runtimes):
@@ -53,14 +53,14 @@ for k in range(100,900,100):
         #sfile.close()
         os.system("./waf --run scratch/MyVanet")
         sfile = open("scratch/conf.txt",'w')
-        sfile.write("idx=" + str(idx+1) + "\r\nvnum="+str(k)+"\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=3000")
+        sfile.write("idx=" + str(idx + 1) + "\r\nvnum=600\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange=" +str(k))
         # s.write("\r\n")
         # s.close()
         sfile.close()
         #c += 1
     # for i in range(10):
     #     os.system("./waf --run scratch/MyVanet")
-    s=open("scratch/data.csv",'a+')
+    s=open("scratch/range.csv",'a+')
     s.write("\r\n")
     s.close()
 # k += steplen

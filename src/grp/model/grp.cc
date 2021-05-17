@@ -32,6 +32,7 @@
 #define GRP_MAXJITTER          (m_helloInterval.GetSeconds () / 10)
 #define JITTER (Seconds (m_uniformRandomVariable->GetValue (0, GRP_MAXJITTER)))
 
+double sum=0;
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("GrpRoutingProtocol");
@@ -438,6 +439,12 @@ RoutingProtocol::RecvGrp (Ptr<Socket> socket)
 							<< " received HELLO message of size " << messageHeader.GetSerializedSize ());
 			ProcessHello (messageHeader, receiverIfaceAddr, senderIfaceAddr);
 			break;
+        case grp::MessageHeader::CP_MESSAGE:
+            NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+							<< "s GRP node " << m_mainAddress
+							<< " received cp message of size " << messageHeader.GetSerializedSize ());
+			ProcessCP (messageHeader, receiverIfaceAddr, senderIfaceAddr);
+			break;
 		default:
 		NS_LOG_DEBUG ("GRP message type " <<
 						int (messageHeader.GetMessageType ()) <<
@@ -632,6 +639,7 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
 							   const Ipv4Address receiverIfaceAddr,
                                const Ipv4Address senderIface)
 {
+    //std::cout<<"sssssssssssss"<<std::endl;
 	const grp::MessageHeader::CP &cp = msg.GetCp ();
 
     //double nextjid = cp.GetTJID();
@@ -645,9 +653,10 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
         lifetime[m_currentJID][m_nextJID]=lifetime[m_nextJID][m_currentJID];
     }
     //VPC();
+    // std::cout<<"ssssssss";
     SendCP();
 	Simulator::Schedule(GRP_NEIGHB_HOLD_TIME, &RoutingProtocol::NeiTableCheckExpire, this, originatorAddress);
-
+    //std::cout<<"dddddddddddd"<<std::endl;
     // if(m_pwaitqueue.empty() == false)
  	// {
  	// 	CheckPacketQueue();
@@ -942,7 +951,7 @@ RoutingProtocol::SendCP ()
 
 	grp::MessageHeader msg;
 	Time now = Simulator::Now ();
-
+    sum++;
 	msg.SetVTime (GRP_NEIGHB_HOLD_TIME);
 	msg.SetOriginatorAddress (m_mainAddress);
 	msg.SetTimeToLive (1);
@@ -993,6 +1002,7 @@ void
 RoutingProtocol::HelloTimerExpire ()
 {
   SendHello ();
+  CpTimerExpire();
   m_helloTimer.Schedule (m_helloInterval);
 }
 
@@ -1000,6 +1010,7 @@ RoutingProtocol::HelloTimerExpire ()
 void
 RoutingProtocol::CpTimerExpire ()
 {
+    // std::cout<<"ddddddddddddddd";
     if(m_JunAreaTag)
     {
         for(int i=0;i<m_JuncNum;i++)
@@ -1310,6 +1321,7 @@ RoutingProtocol::IntraPathRouting(Ipv4Address dest,  int dstjid)
 Ptr<Ipv4Route>
 RoutingProtocol::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDevice> oif, Socket::SocketErrno &sockerr)
 {
+    //std::cout<<"dddddddddddffffffffffff";
 	NS_LOG_FUNCTION (this << " " << m_ipv4->GetObject<Node> ()->GetId () << " " << header.GetDestination () << " " << oif);
 	Ptr<Ipv4Route> rtentry = NULL;
 

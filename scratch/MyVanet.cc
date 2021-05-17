@@ -27,6 +27,7 @@
 #include <queue>
 #include <cstdlib>
 #include <ctime>
+#include "grp.h"
 
 using namespace ns3;
 using namespace std;
@@ -566,7 +567,6 @@ int main (int argc, char *argv[])
 		NS_LOG_UNCOND(itr->second.GetSeconds() << " " << itr->first.src << "->" << itr->first.dst);
 		lc++;
 	}
-
     //打印统计数据
     cout << "Simulation results";
     cout << "Sent:"<< SendCount << " Received:" << recount 
@@ -575,11 +575,11 @@ int main (int argc, char *argv[])
 
 
     //将统计数据输出到文件中
-    std::ofstream fout("scratch/data.csv", std::ios::app);
-	fout << nNodes << "," << DistanceRange << "," << hops << "," << CarryTimeThreshold << "     ";
-    fout << "receive:"<<(recount * 1.0 / SendCount) << "  "<<"delay:" << (double)allTime/recount/1000000<<endl;
+    std::ofstream fout("scratch/range.csv", std::ios::app);
+	fout <<idx <<","<<nNodes << "," << DistanceRange << "," << hops << "," << CarryTimeThreshold << "     ";
+    fout << "receive:"<<(recount * 1.0 / SendCount) << "  "<<"delay:" << (double)allTime/recount/1000000<<" "<<sum<<endl;
 
-    fout << std::endl;
+    //fout << std::endl;
     fout.close();
 
 
