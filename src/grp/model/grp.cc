@@ -491,7 +491,7 @@ RoutingProtocol::CheckPacketQueue()
  		m_pqueue.pop_back();
 
  		Ipv4Address dest = qentry.m_header.GetDestination();
-         std::cout<<dest<<std::endl;
+         //std::cout<<dest<<std::endl;
  		Ipv4Address origin = qentry.m_header.GetSource();
 
   		QPacketInfo pInfo(origin, dest);
@@ -652,7 +652,7 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
     //double nextjid = cp.GetTJID();
     //std::cout<<"sssss"<<std::endl;
 	Ipv4Address originatorAddress = msg.GetOriginatorAddress();
-	std::cout<<cp.GetFJID()<<" "<<m_id<<std::endl;
+	//std::cout<<cp.GetFJID()<<" "<<m_id<<std::endl;
     //Ipv4Address nexthop=NextHop(originatorAddress,nextjid);
     if(cp.GetNexthop()!=m_id)
     {
@@ -756,7 +756,7 @@ RoutingProtocol:: VPC()
             vp=i->second.N_neighbor_address;
         }
     }
-    std::cout<<"ssssssssssssssssssss"<<std::endl;
+    //std::cout<<"ssssssssssssssssssss"<<std::endl;
     int vnx=GetPosition(vn).x;
     int vny=GetPosition(vn).y;
     int vpx=GetPosition(vp).x;
@@ -775,7 +775,7 @@ RoutingProtocol:: VPC()
         }
     }
     else
-    {std::cout<<"sssssssssssssss"<<std::endl;
+    {//std::cout<<"sssssssssssssss"<<std::endl;
         bool f=false;
         for (std::map<Ipv4Address, NeighborTableEntry>::const_iterator i = m_neiTable.begin (); i != m_neiTable.end (); i++)
         {
