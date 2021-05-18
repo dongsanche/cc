@@ -329,6 +329,8 @@ void ReceivePacket (Ptr<Socket> socket)
 	}
 }
 
+
+
 void
 DropPacket (Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Header &header )
 {
@@ -567,10 +569,10 @@ int main (int argc, char *argv[])
 	}
 
     //打印统计数据
-    NS_LOG_UNCOND("Simulation results");
-    NS_LOG_UNCOND("Sent:"<< SendCount << " Received:" << recount 
-		<< " Drop:" << DropCount << " delay:" << (double)allTime/recount/1000000 << "ms");
-    NS_LOG_UNCOND("Store Error: " << lc - DropCount);
+    std::cout<<"Simulation results";
+    std::cout<<"Sent:"<< SendCount << " Received:" << recount 
+		<< " Drop:" << DropCount << " delay:" << (double)allTime/recount/1000000 << "ms";
+    std::cout<<"Store Error: " << lc - DropCount<<std::endl;
 
     //将统计数据输出到文件中
     std::ofstream fout("scratch/data.csv", std::ios::app);

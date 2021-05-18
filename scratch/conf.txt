@@ -3,4 +3,4 @@ vnum=100
 range=250
 seghop=2
 CarryTimeThreshold=20
-DistanceRange=2000
+DistanceRange=500

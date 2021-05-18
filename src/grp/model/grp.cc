@@ -269,7 +269,7 @@ void RoutingProtocol::DoInitialize ()
     {
         for(int j=0;j<49;j++)
         {
-            lifetime[i][j]=INT32_MIN;
+            lifetime[i][j]=-100000000;
             //std::cout<<i<<" "<<j<<std::endl;
         }
     }
@@ -491,6 +491,7 @@ RoutingProtocol::CheckPacketQueue()
  		m_pqueue.pop_back();
 
  		Ipv4Address dest = qentry.m_header.GetDestination();
+         std::cout<<dest<<std::endl;
  		Ipv4Address origin = qentry.m_header.GetSource();
 
   		QPacketInfo pInfo(origin, dest);
@@ -523,7 +524,7 @@ RoutingProtocol::CheckPacketQueue()
         }
         //std::cout<<nextjid<<" "<<"xxxxxxxxxSS"<<std::endl;
         nextHop = IntraPathRouting(dest, nextjid);
-        
+        //nextHop = NextHop(dest, nextjid);
 
         DataPacketHeader.SetNextJID(nextjid);
         qentry.m_packet->AddHeader (DataPacketHeader);
@@ -647,19 +648,31 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
                                const Ipv4Address senderIface)
 {
 	const grp::MessageHeader::CP &cp = msg.GetCp ();
-
+    //std::cout<<"yyyyyyyyyyyyyyy"<<std::endl;
     //double nextjid = cp.GetTJID();
-    std::cout<<"sssss"<<std::endl;
+    //std::cout<<"sssss"<<std::endl;
 	Ipv4Address originatorAddress = msg.GetOriginatorAddress();
-	
+	std::cout<<cp.GetFJID()<<" "<<m_id<<std::endl;
     //Ipv4Address nexthop=NextHop(originatorAddress,nextjid);
+    if(cp.GetNexthop()!=m_id)
+    {
+        return;
+    }
     if(cp.GetLifetime()>VPC())
     {
         lifetime[m_nextJID][m_currentJID]=VPC();
         lifetime[m_currentJID][m_nextJID]=lifetime[m_nextJID][m_currentJID];
     }
     //VPC();
-    SendCP();
+    if(m_JunAreaTag)
+    {
+        RSE(msg);
+    }
+    else
+    {
+        SendCP();
+    }
+    
 	Simulator::Schedule(GRP_NEIGHB_HOLD_TIME, &RoutingProtocol::NeiTableCheckExpire, this, originatorAddress);
 
     // if(m_pwaitqueue.empty() == false)
@@ -694,6 +707,7 @@ int
 RoutingProtocol::AddrToID(Ipv4Address addr)
 {
 	int tnum = addr.Get();
+    //std::cout<<tnum / 256 % 256 * 256 + tnum % 256 - 1<<"ssssssssss"<<std::endl;
 	return tnum / 256 % 256 * 256 + tnum % 256 - 1;
 }
 
@@ -715,7 +729,8 @@ RoutingProtocol:: VPC()
     Ipv4Address nexthop;
     if(m_nextJID>=0)
     {
-        nexthop=IntraPathRouting(m_mainAddress,m_nextJID);
+        nexthop=IntraPathRouting(m_rsuip,m_nextJID);
+        // nexthop=NextHop(m_rsujid,m_nextJID);
         //std::cout<<m_nextJID<<" "<<"sSSSSSSSS"<<std::endl;
     }
     double t=0;   //持续时间
@@ -741,6 +756,7 @@ RoutingProtocol:: VPC()
             vp=i->second.N_neighbor_address;
         }
     }
+    std::cout<<"ssssssssssssssssssss"<<std::endl;
     int vnx=GetPosition(vn).x;
     int vny=GetPosition(vn).y;
     int vpx=GetPosition(vp).x;
@@ -759,7 +775,7 @@ RoutingProtocol:: VPC()
         }
     }
     else
-    {
+    {std::cout<<"sssssssssssssss"<<std::endl;
         bool f=false;
         for (std::map<Ipv4Address, NeighborTableEntry>::const_iterator i = m_neiTable.begin (); i != m_neiTable.end (); i++)
         {
@@ -784,7 +800,7 @@ RoutingProtocol:: VPC()
             t=(sqrt(pow(cx-vnx, 2) + pow(cy-vny, 2)))/ivn->second.N_speed;
         }
     }
-    std::cout<<lifetime[m_currentJID][m_nextJID]<<std::endl;
+    //std::cout<<lifetime[m_currentJID][m_nextJID]<<std::endl;
     if(t<lifetime[m_currentJID][m_nextJID]&&lifetime[m_currentJID][m_nextJID]>0)
     {
         lifetime[m_currentJID][m_nextJID]=t;
@@ -795,7 +811,7 @@ RoutingProtocol:: VPC()
         lifetime[m_currentJID][m_nextJID]=t;
         lifetime[m_nextJID][m_currentJID]=lifetime[m_currentJID][m_nextJID];
     }
-    //std::cout<<t<<std::endl;
+    
     return lifetime[m_currentJID][m_nextJID];
 }
 
@@ -872,37 +888,34 @@ RoutingProtocol::GetNearestJID()
 }
 
 
-Ipv4Address
-RoutingProtocol::NextHop(Ipv4Address dest,  int dstjid)
+int
+RoutingProtocol::NextHop(int dest,  int dstjid)
 {
 	Ipv4Address nextHop = Ipv4Address("127.0.0.1");
-
     if(dstjid < 0)
     {
-        return  nextHop;
+        return  AddrToID(nextHop);
     }
 
 	Ptr<MobilityModel> MM = m_ipv4->GetObject<MobilityModel> ();
 	double cx = MM->GetPosition().x;
 	double cy = MM->GetPosition().y;
-	
-	double dx = GetPosition(dest).x;
-	double dy = GetPosition(dest).y;
+	double dx = m_map[dest].x;
+	double dy = m_map[dest].y;
 	double curDisToDst = sqrt(pow(cx-dx, 2) + pow(cy-dy, 2));
 	if(curDisToDst < RSSIDistanceThreshold)
-		return dest;
-
+    {
+        return dest;
+    }
     double jx = m_map[dstjid].x;
 	double jy = m_map[dstjid].y;
 	double mindis = sqrt(pow(cx-jx, 2) + pow(cy-jy, 2));
-
 	for (std::map<Ipv4Address, NeighborTableEntry>::const_iterator i = m_neiTable.begin (); i != m_neiTable.end (); i++)
 	{
 		if(i->second.N_status == NeighborTableEntry::STATUS_NOT_SYM)
 		{
 			continue;
 		}
-
 		double nx = i->second.N_location_x;
 		double ny = i->second.N_location_y;
 		double neiDisToJID = sqrt(pow(nx-jx, 2) + pow(ny-jy, 2));
@@ -910,6 +923,7 @@ RoutingProtocol::NextHop(Ipv4Address dest,  int dstjid)
 		if(neiDisToJID < mindis && curDisToNei < RSSIDistanceThreshold)
 		{
             int cjid = GetNearestJID();
+            //std::cout<<"dsdsdsdsd";
             //此处的条件判断用以防止当前车辆将数据包传输给其他路段的节点，
             //其他路段的节点同样有可能满足上一个条件判断
 			if(m_JunAreaTag == false || isBetweenSegment(nx, ny, cjid, dstjid) == true)
@@ -919,8 +933,12 @@ RoutingProtocol::NextHop(Ipv4Address dest,  int dstjid)
             }
 		}
 	}
-	
-	return nextHop;
+    if(nextHop=="127.0.0.1")
+    {
+        return -1;
+    }
+        
+	return AddrToID(nextHop);
 }
 
 
@@ -971,21 +989,20 @@ RoutingProtocol::SendCP ()
 	msg.SetMessageSequenceNumber (GetMessageSequenceNumber ());
 	grp::MessageHeader::CP &cp = msg.GetCp();
     Ptr<MobilityModel> MM = m_ipv4->GetObject<MobilityModel> ();
-    if(m_JunAreaTag==true)
-    {
-        cp.SetOVID(m_id);
-        cp.SetVTime(GRP_NEIGHB_HOLD_TIME);
-        cp_mid=cp.GetOVID();
-        cp_time=GRP_NEIGHB_HOLD_TIME;
-    }
-    else
-    {
-        cp.SetOVID(m_id);
-        cp.SetVTime(cp_time);
-    }
+    cp.SetOVID(m_id);
+    cp.SetVTime(GRP_NEIGHB_HOLD_TIME);
+    cp_mid=cp.GetOVID();
+    cp_time=GRP_NEIGHB_HOLD_TIME;
     cp.SetFJID(m_currentJID);
+    // std::cout<<"jid " << m_currentJID<<std::endl;
     m_nextJID=GetPacketNextJID(true);
-    cp.SetTJID(m_nextJID);
+    int next=NextHop(m_rsujid,m_nextJID);
+    if(next==-1)
+    {
+        return;
+    }
+    cp.SetNexthop(next);
+    //std::cout<<next<<" "<<cp.GetNexthop()<<std::endl;
     cp.SetTJID(m_nextJID);
     cp.SetTNV(m_neiTable.size());
     cp.SetLifetime((uint16_t)lifetime[m_nextJID][m_currentJID]);
@@ -996,7 +1013,11 @@ RoutingProtocol::SendCP ()
     p->AddHeader (msg);
     packet->AddAtEnd (p);
     SendPacket (packet);
-    std::cout<<"ffff"<<std::endl;
+    std::ofstream fout("scratch/a.txt", std::ios::app);
+	fout << m_currentJID << "," << m_nextJID << std::endl;
+    fout << m_id << "," <<next<< std::endl;
+    fout << std::endl;
+    fout.close();
 }
 
 uint16_t RoutingProtocol::GetPacketSequenceNumber ()
@@ -1216,6 +1237,43 @@ RoutingProtocol::isBetweenSegment(double nx, double ny, int cjid, int djid)
     return res;
 }
 
+bool
+RoutingProtocol::isBetween(double nx, double ny, int cjid, int djid,double cx,double cy)
+{
+    bool res = false;
+    double djx = m_map[djid].x;
+    double djy = m_map[djid].y;
+    double cjx = m_map[cjid].x;
+    double cjy = m_map[cjid].y;
+    if(djx==cjx)
+    {
+        if(djx>nx&&nx>cx)
+        {
+            res=true;
+        }
+        else if(cx>nx&&nx>djx)
+        {
+            res=true;
+        }
+        else
+            res=false;
+    }
+    else if(djy==cjy)
+    {
+        if(djy>ny&&ny>cy)
+        {
+            res=true;
+        }
+        else if(cy>ny&&ny>djy)
+        {
+            res=true;
+        }
+        else
+            res=false;
+    }
+    return res;
+}
+
 Ipv4Address
 RoutingProtocol::IntraPathRouting(Ipv4Address dest,  int dstjid)
 {
@@ -1263,7 +1321,7 @@ RoutingProtocol::IntraPathRouting(Ipv4Address dest,  int dstjid)
             }
 		}
 	}
-	
+	//std::cout<<AddrToID(nextHop)<<std::endl;
 	return nextHop;
 }
 
@@ -1364,6 +1422,7 @@ RoutingProtocol::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDe
     Ipv4Address loopback ("127.0.0.1");
     //std::cout<<dstjid<<"   out"<<std::endl;
     nextHop = IntraPathRouting(dest, dstjid);
+    //nextHop = NextHop(dest, dstjid);
     //std::cout<<m_nextJID<<" "<<"llllllllllSSS"<<std::endl;
     if(nextHop == loopback || nextHop == dest || m_JunAreaTag == true)
     {
@@ -1465,8 +1524,7 @@ RoutingProtocol::GetPacketNextJID(bool tag)
     int maxx=-10000000;
     for(int i = 0; i < m_JuncNum; i++)
     {
-
-        if(isAdjacentVex(i, m_currentJID) == true)
+        if(isAdjacentVex(i, m_currentJID) == true&&i!=m_currentJID)
         {
             double njx=m_map[m_currentJID].x;
             double njy=m_map[m_currentJID].y;
@@ -1700,6 +1758,7 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
     //路段内路由，为数据包选定下一跳节点
     //std::cout<<nextjid<<" "<<"ttttttttttSSSSSS"<<std::endl;
 	Ipv4Address nextHop = IntraPathRouting(dest, nextjid);
+    //Ipv4Address nextHop = NextHop(dest, nextjid);
     
 	NS_LOG_UNCOND("" << Simulator::Now().GetSeconds() << " " << m_id << "->" << AddrToID(nextHop));
 
