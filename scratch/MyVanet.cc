@@ -28,7 +28,6 @@
 #include <cstdlib>
 #include <ctime>
 #include "grp.h"
-
 using namespace ns3;
 using namespace std;
 
@@ -45,7 +44,7 @@ double DistanceRange = 0;
 int64_t allTime = 0;
 int nNodes = 0;
 int pcount[100] = {0};
-
+extern int scores[49][49];
 struct PacketLog
 {
 	int src;
@@ -331,30 +330,32 @@ void ReceivePacket (Ptr<Socket> socket)
 	}
 }
 
+
+
 void
 DropPacket (Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Header &header )
 {
-	NS_LOG_UNCOND ("d " << Simulator::Now ().GetSeconds () << " " << context << " "
-			<< AddrToID(header.GetSource()) << " > " << AddrToID(header.GetDestination()) << " "
-			<< "id " << header.GetIdentification());
-	*stream->GetStream () << "d " << Simulator::Now ().GetSeconds () << " " << context << " "
-			<< header.GetSource() << " > " << header.GetDestination() << " "
-			<< "id " << header.GetIdentification()
-			<< std::endl;
-	DropCount++;
+	// NS_LOG_UNCOND ("d " << Simulator::Now ().GetSeconds () << " " << context << " "
+	// 		<< AddrToID(header.GetSource()) << " > " << AddrToID(header.GetDestination()) << " "
+	// 		<< "id " << header.GetIdentification());
+	// *stream->GetStream () << "d " << Simulator::Now ().GetSeconds () << " " << context << " "
+	// 		<< header.GetSource() << " > " << header.GetDestination() << " "
+	// 		<< "id " << header.GetIdentification()
+	// 		<< std::endl;
+	// DropCount++;
 }
 
 void
 StorePacket (Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Header &header)
 {
- 	StoreCount ++;
- 	NS_LOG_UNCOND ("s " << Simulator::Now ().GetSeconds () << " " << context << " "
- 				<< header.GetSource() << " > " << header.GetDestination() << " "
- 				<< "id " << header.GetIdentification());
- 	*stream->GetStream () << "s " << Simulator::Now ().GetSeconds () << " " << context << " "
- 				<< header.GetSource() << " > " << header.GetDestination() << " "
- 				<< "id " << header.GetIdentification()
- 				<< std::endl;
+ 	// StoreCount ++;
+ 	// NS_LOG_UNCOND ("s " << Simulator::Now ().GetSeconds () << " " << context << " "
+ 	// 			<< header.GetSource() << " > " << header.GetDestination() << " "
+ 	// 			<< "id " << header.GetIdentification());
+ 	// *stream->GetStream () << "s " << Simulator::Now ().GetSeconds () << " " << context << " "
+ 	// 			<< header.GetSource() << " > " << header.GetDestination() << " "
+ 	// 			<< "id " << header.GetIdentification()
+ 	// 			<< std::endl;
 
 }
 
@@ -562,17 +563,16 @@ int main (int argc, char *argv[])
     //打印未能成功发送的数据包，包括发送时间、源节点和目标节点
     NS_LOG_UNCOND("");
     int lc = 0;
-	for(std::map<PacketLog, Time>::iterator itr = PLog.begin(); itr != PLog.end(); itr ++)
-	{
-		NS_LOG_UNCOND(itr->second.GetSeconds() << " " << itr->first.src << "->" << itr->first.dst);
-		lc++;
-	}
+	// for(std::map<PacketLog, Time>::iterator itr = PLog.begin(); itr != PLog.end(); itr ++)
+	// {
+	// 	NS_LOG_UNCOND(itr->second.GetSeconds() << " " << itr->first.src << "->" << itr->first.dst);
+	// 	lc++;
+	// }
     //打印统计数据
-    cout << "Simulation results";
-    cout << "Sent:"<< SendCount << " Received:" << recount 
+    std::cout<<"Simulation results";
+    std::cout<<"Sent:"<< SendCount << " Received:" << recount 
 		<< " Drop:" << DropCount << " delay:" << (double)allTime/recount/1000000 << "ms";
-    cout << "Store Error: " << lc - DropCount << endl;
-
+    std::cout<<"Store Error: " << lc - DropCount<<std::endl;
 
     //将统计数据输出到文件中
     std::ofstream fout("scratch/range.csv", std::ios::app);
@@ -581,6 +581,18 @@ int main (int argc, char *argv[])
 
     //fout << std::endl;
     fout.close();
+    std::ofstream ffout("scratch/b.txt", std::ios::app);
+	for(int i=0;i<49;i++)
+    {
+        for(int j=0;j<49;j++)
+        {
+            ffout<<scores[i][j]<<" ";
+        }
+        ffout<<endl;
+    }
+
+    //fout << std::endl;
+    ffout.close();
 
 
     return 0;

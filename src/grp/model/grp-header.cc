@@ -294,6 +294,9 @@ MessageHeader::GetSerializedSize (void) const
       NS_LOG_DEBUG ("Hello Message Size: " << size << " + " << m_message.hello.GetSerializedSize ());
       size += m_message.hello.GetSerializedSize ();
       break;
+    case CP_MESSAGE:
+      size += m_message.cp.GetSerializedSize ();
+      break;
     default:
       NS_ASSERT (false);
     }
@@ -323,6 +326,9 @@ MessageHeader::Serialize (Buffer::Iterator start) const
     case HELLO_MESSAGE:
       m_message.hello.Serialize (i);
       break;
+    case CP_MESSAGE:
+      m_message.cp.Serialize(i);
+      break;
     default:
       NS_ASSERT (false);
     }
@@ -347,6 +353,9 @@ MessageHeader::Deserialize (Buffer::Iterator start)
     {
     case HELLO_MESSAGE:
       size += m_message.hello.Deserialize (i, m_messageSize - GRP_MSG_HEADER_SIZE);
+      break;
+    case CP_MESSAGE:
+      size += m_message.cp.Deserialize (i, m_messageSize - GRP_MSG_HEADER_SIZE);
       break;
     default:
       NS_ASSERT (false);
@@ -490,10 +499,10 @@ MessageHeader::CP::Serialize (Buffer::Iterator start) const
     i.WriteU64 (this->TIMES);
     i.WriteU32 (this->F_Jun_ID);
     i.WriteU32 (this->TO_Jun_ID);
-    i.WriteU16 (this->TN_v);
-    i.WriteU16 (this->Lifetime);
-    i.WriteU16 (this->TN_h);
-
+    i.WriteU32 (this->TN_v);
+    i.WriteU32 (this->Lifetime);
+    i.WriteU32 (this->TN_h);
+    i.WriteU32 (this->nexthop);
     //i.WriteU8 ((uint8_t)this->conlist.size());
 
     // int lsize = 0;
@@ -525,16 +534,17 @@ uint32_t
 MessageHeader::CP::Deserialize (Buffer::Iterator start, uint32_t messageSize)
 {
     Buffer::Iterator i = start;
-    int basesize = 30;
+    int basesize = 40;
 
     //this->neighborInterfaceAddresses.clear ();
     this->O_V_ID = i.ReadU64 ();
     this->TIMES = i.ReadU64 ();
     this->F_Jun_ID = i.ReadU32 ();
     this->TO_Jun_ID = i.ReadU32 ();
-    this->TN_v = i.ReadU16 ();
-    this->Lifetime = i.ReadU16 ();
-    this->TN_h = i.ReadU16 ();
+    this->TN_v = i.ReadU32 ();
+    this->Lifetime = i.ReadU32 ();
+    this->TN_h = i.ReadU32 ();
+    this->nexthop = i.ReadU32 ();
     
     // int num = i.ReadU8 ();
     // int listsize = i.ReadU8 ();

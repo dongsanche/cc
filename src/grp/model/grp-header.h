@@ -175,8 +175,8 @@ public:
   enum MessageType
   {
 	HELLO_MESSAGE = 1,
-  CPACK_MESSAGE = 2,
-  CP_MESSAGE=3,
+  CPACK_MESSAGE = 3,
+  CP_MESSAGE=2,
   };
 
   MessageHeader ();
@@ -370,6 +370,7 @@ public:
         uint32_t TN_v=0;
         uint32_t Lifetime;
         uint32_t TN_h=1;
+        uint32_t nexthop=-1;
 
         int bsize = 0;
         int asize = 0;
@@ -393,7 +394,7 @@ public:
             this->O_V_ID=(uint64_t)m_id;
         }
 
-        double GetOVID()
+        int GetOVID()
         {
             return this->O_V_ID;
         }
@@ -411,10 +412,10 @@ public:
 
         void SetFJID(int JID)
         {
-            this->F_Jun_ID=(uint32_t)JID;
+            this->F_Jun_ID=JID;
         }
 
-        double GetFJID()
+        int GetFJID() const
         {
             return this->F_Jun_ID;
         }
@@ -423,10 +424,19 @@ public:
         {
             this->TO_Jun_ID=(uint32_t)JID;
         }
-
-        double GetTJID() const
+        int GetNexthop() const
         {
-            return (double)this->TO_Jun_ID;
+            return this->nexthop;
+        }
+
+        void SetNexthop(int next)
+        {
+            this->nexthop=(uint32_t)next;
+        }
+
+        int GetTJID() const
+        {
+            return this->TO_Jun_ID;
         }
 
         void SetTNV(int n)
@@ -442,9 +452,9 @@ public:
             }
         }
 
-        double GetLifetime() const
+        int GetLifetime() const
         {
-            return (double)this->Lifetime;
+            return this->Lifetime;
         }
 
         void SetTNH()
@@ -464,7 +474,9 @@ public:
         }
 
         void Print (std::ostream &os) const;
-        uint32_t GetSerializedSize (void) const;
+        uint32_t GetSerializedSize (void) const{
+            return 40;
+        }
         void Serialize (Buffer::Iterator start) const;
         uint32_t Deserialize (Buffer::Iterator start, uint32_t messageSize);
         

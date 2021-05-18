@@ -23,6 +23,7 @@
 #include "ns3/myserver.h"
 
 extern double sum;     //控制包数量
+extern int scores[49][49];
 namespace ns3 {
 
 struct PacketQueueEntry
@@ -199,6 +200,7 @@ private:
     bool m_jqueuetag[49];
     int m_JuncNum=49;
     int m_rsujid = 45;
+    Ipv4Address m_rsuip=Ipv4Address("10.1.0.101");
     double startTime = 5;
     double OutsightTransRange = 100;
     double RoadLength = 500;
@@ -254,10 +256,10 @@ private:
 
     int cp_currentJID=-1;
     int cp_nextJID=-1;
-    int lifetime[49][49]={INT32_MAX}; //生存时间
+    double lifetime[49][49]={INT32_MAX}; //生存时间
     // int NTOTAL=0;  //总车辆数
     // int NH=0;       //总跳数
-    int scores[49][49];  //路段得分
+    //int scores[49][49];  //路段得分
     int cp_mid=-1;       //初始节点
     Time cp_time;      //初始时间
     
@@ -306,7 +308,7 @@ private:
     //路段内路由，数据包在路段内传播时的路由方法，即如何再路段内挑选数据包的下一跳  
     Ipv4Address IntraPathRouting(Ipv4Address dest, int dstjid);
 
-    Ipv4Address NextHop(Ipv4Address dest, int dstjid);
+    int NextHop(int dest, int dstjid);
 
     int GetNextJID(bool tag);
 
@@ -316,6 +318,8 @@ private:
     bool isAdjacentVex(int sjid, int ejid);
     //用以确认邻居车辆是否位于两个指定路口所形成的矩形区域内
     bool isBetweenSegment(double nx, double ny, int cjid, int djid);
+    // 用以确认下一跳是否在当前车辆和下一路口间
+    bool isBetween(double nx, double ny, int cjid, int djid,double cx,double cy);
 
 /*------------------------------------------------------------------------------------------*/
     //收到控制包时的处理逻辑，控制包包括HelloMessage，即Beacon
