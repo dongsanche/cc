@@ -446,10 +446,7 @@ public:
 
         void SetLifetime(int t)
         {
-            if(this->Lifetime<(uint16_t)t)
-            {
-                this->Lifetime=t;
-            }
+            this->Lifetime=t;
         }
 
         int GetLifetime() const
@@ -457,11 +454,10 @@ public:
             return this->Lifetime;
         }
 
-        void SetTNH()
+        void SetTNH(int hop)
         {
-            this->TN_h++;
+            this->TN_h=hop;
         }
-
         int GetTNH() const
         {
             return TN_h;

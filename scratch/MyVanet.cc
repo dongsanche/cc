@@ -30,7 +30,9 @@
 #include "grp.h"
 using namespace ns3;
 using namespace std;
-
+extern double scores[49][49];
+extern double lifetime[49][49];
+int sum;
 NS_LOG_COMPONENT_DEFINE ("MyFirstNS3");
 
 int recount = 0;
@@ -44,7 +46,7 @@ double DistanceRange = 0;
 int64_t allTime = 0;
 int nNodes = 0;
 int pcount[100] = {0};
-extern int scores[49][49];
+
 struct PacketLog
 {
 	int src;
@@ -281,9 +283,9 @@ void ReceivePacket (Ptr<Socket> socket)
 	Address srcAddress;
 	while ((packet = socket->RecvFrom (srcAddress)))
 	{
-		std::ostringstream oss;
+		//std::ostringstream oss;
 		int64_t now = Simulator::Now ().GetNanoSeconds();
-		oss << now << " " << socket->GetNode ()->GetId ();
+		// oss << now << " " << socket->GetNode ()->GetId ();
 		if (InetSocketAddress::IsMatchingType (srcAddress))
 		{
 			uint8_t buffer[10];
@@ -309,8 +311,8 @@ void ReceivePacket (Ptr<Socket> socket)
 
 			allTime += now - nano;
 
-			InetSocketAddress addr = InetSocketAddress::ConvertFrom (srcAddress);
-		    oss << " received one packet from " << AddrToID(addr.GetIpv4 ());
+			//InetSocketAddress  = InetSocketAddress::ConvertFrom (srcAddress);
+		    //oss << " received one packet from " << AddrToID(addr.GetIpv4 ());
 		    recount++;
 
 
@@ -324,9 +326,9 @@ void ReceivePacket (Ptr<Socket> socket)
 		}
 		else
 		{
-		    oss << " received one packet!";
+		    //oss << " received one packet!";
 		}
-	    NS_LOG_UNCOND (oss.str());
+	    //NS_LOG_UNCOND (oss.str());
 	}
 }
 
@@ -561,13 +563,14 @@ int main (int argc, char *argv[])
 /* ------------------------------------仿真结束后统计和打印网络运行数据--------------------------------------------*/
 
     //打印未能成功发送的数据包，包括发送时间、源节点和目标节点
-    NS_LOG_UNCOND("");
+    // NS_LOG_UNCOND("");
     int lc = 0;
-	// for(std::map<PacketLog, Time>::iterator itr = PLog.begin(); itr != PLog.end(); itr ++)
-	// {
-	// 	NS_LOG_UNCOND(itr->second.GetSeconds() << " " << itr->first.src << "->" << itr->first.dst);
-	// 	lc++;
-	// }
+	for(std::map<PacketLog, Time>::iterator itr = PLog.begin(); itr != PLog.end(); itr ++)
+	{
+		//NS_LOG_UNCOND(itr->second.GetSeconds() << " " << itr->first.src << "->" << itr->first.dst);
+		lc++;
+	}
+
     //打印统计数据
     std::cout<<"Simulation results";
     std::cout<<"Sent:"<< SendCount << " Received:" << recount 
@@ -581,19 +584,29 @@ int main (int argc, char *argv[])
 
     //fout << std::endl;
     fout.close();
+    // std::ofstream ffout("scratch/b.txt", std::ios::app);
+	// for(int i=0;i<49;i++)
+    // {
+    //     for(int j=0;j<49;j++)
+    //     {
+    //         ffout<<scores[i][j]<<" ";
+    //     }
+    //     ffout<<endl;
+    // }
+
+    //fout << std::endl;
+    //ffout.close();
+
     std::ofstream ffout("scratch/b.txt", std::ios::app);
 	for(int i=0;i<49;i++)
     {
         for(int j=0;j<49;j++)
         {
-            ffout<<scores[i][j]<<" ";
+            ffout<<lifetime[i][j]<<" ";
         }
-        ffout<<endl;
+        ffout<<std::endl;
     }
-
-    //fout << std::endl;
     ffout.close();
-
 
     return 0;
 }

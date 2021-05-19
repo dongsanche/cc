@@ -22,8 +22,8 @@
 #include "ns3/digitalMap.h"
 #include "ns3/myserver.h"
 
-extern double sum;     //控制包数量
-extern int scores[49][49];
+extern double scores[49][49];
+extern double lifetime[49][49];
 namespace ns3 {
 
 struct PacketQueueEntry
@@ -256,12 +256,13 @@ private:
 
     int cp_currentJID=-1;
     int cp_nextJID=-1;
-    double lifetime[49][49]={INT32_MAX}; //生存时间
+    //double lifetime[49][49]={INT32_MAX}; //生存时间
     // int NTOTAL=0;  //总车辆数
     // int NH=0;       //总跳数
-    //int scores[49][49];  //路段得分
-    int cp_mid=-1;       //初始节点
+    //double scores[49][49];  //路段得分
+    int cp_hop;       //跳数
     Time cp_time;      //初始时间
+
     
 /*------------------------------------------------------------------------------------------*/
     //从配置文件读取实验运行参数
@@ -309,6 +310,7 @@ private:
     Ipv4Address IntraPathRouting(Ipv4Address dest, int dstjid);
 
     int NextHop(int dest, int dstjid);
+    int nexthop(int djid);
 
     int GetNextJID(bool tag);
 
@@ -326,7 +328,7 @@ private:
     void RecvGrp (Ptr<Socket> socket);
 
     //CP机制处理逻辑
-    void SendCP ();
+    void SendCP (int hop);
     void ProcessCP (const grp::MessageHeader &msg, const Ipv4Address receiverIfaceAddr, const Ipv4Address senderIface);
     
     //Beacon机制处理逻辑
