@@ -29,7 +29,8 @@
 #include <ctime>
 
 using namespace ns3;
-
+extern double scores[49][49];
+extern double lifetime[49][49];
 NS_LOG_COMPONENT_DEFINE ("MyFirstNS3");
 
 int recount = 0;
@@ -334,27 +335,27 @@ void ReceivePacket (Ptr<Socket> socket)
 void
 DropPacket (Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Header &header )
 {
-	NS_LOG_UNCOND ("d " << Simulator::Now ().GetSeconds () << " " << context << " "
-			<< AddrToID(header.GetSource()) << " > " << AddrToID(header.GetDestination()) << " "
-			<< "id " << header.GetIdentification());
-	*stream->GetStream () << "d " << Simulator::Now ().GetSeconds () << " " << context << " "
-			<< header.GetSource() << " > " << header.GetDestination() << " "
-			<< "id " << header.GetIdentification()
-			<< std::endl;
-	DropCount++;
+	// NS_LOG_UNCOND ("d " << Simulator::Now ().GetSeconds () << " " << context << " "
+	// 		<< AddrToID(header.GetSource()) << " > " << AddrToID(header.GetDestination()) << " "
+	// 		<< "id " << header.GetIdentification());
+	// *stream->GetStream () << "d " << Simulator::Now ().GetSeconds () << " " << context << " "
+	// 		<< header.GetSource() << " > " << header.GetDestination() << " "
+	// 		<< "id " << header.GetIdentification()
+	// 		<< std::endl;
+	// DropCount++;
 }
 
 void
 StorePacket (Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Header &header)
 {
- 	StoreCount ++;
- 	NS_LOG_UNCOND ("s " << Simulator::Now ().GetSeconds () << " " << context << " "
- 				<< header.GetSource() << " > " << header.GetDestination() << " "
- 				<< "id " << header.GetIdentification());
- 	*stream->GetStream () << "s " << Simulator::Now ().GetSeconds () << " " << context << " "
- 				<< header.GetSource() << " > " << header.GetDestination() << " "
- 				<< "id " << header.GetIdentification()
- 				<< std::endl;
+ 	// StoreCount ++;
+ 	// NS_LOG_UNCOND ("s " << Simulator::Now ().GetSeconds () << " " << context << " "
+ 	// 			<< header.GetSource() << " > " << header.GetDestination() << " "
+ 	// 			<< "id " << header.GetIdentification());
+ 	// *stream->GetStream () << "s " << Simulator::Now ().GetSeconds () << " " << context << " "
+ 	// 			<< header.GetSource() << " > " << header.GetDestination() << " "
+ 	// 			<< "id " << header.GetIdentification()
+ 	// 			<< std::endl;
 
 }
 
@@ -560,11 +561,11 @@ int main (int argc, char *argv[])
 /* ------------------------------------仿真结束后统计和打印网络运行数据--------------------------------------------*/
 
     //打印未能成功发送的数据包，包括发送时间、源节点和目标节点
-    NS_LOG_UNCOND("");
+    // NS_LOG_UNCOND("");
     int lc = 0;
 	for(std::map<PacketLog, Time>::iterator itr = PLog.begin(); itr != PLog.end(); itr ++)
 	{
-		NS_LOG_UNCOND(itr->second.GetSeconds() << " " << itr->first.src << "->" << itr->first.dst);
+		//NS_LOG_UNCOND(itr->second.GetSeconds() << " " << itr->first.src << "->" << itr->first.dst);
 		lc++;
 	}
 
@@ -582,6 +583,16 @@ int main (int argc, char *argv[])
     fout << std::endl;
     fout.close();
 
+    std::ofstream ffout("scratch/b.txt", std::ios::app);
+	for(int i=0;i<49;i++)
+    {
+        for(int j=0;j<49;j++)
+        {
+            ffout<<lifetime[i][j]<<" ";
+        }
+        ffout<<std::endl;
+    }
+    ffout.close();
 
     return 0;
 }

@@ -1,6 +1,6 @@
 idx=0
-vnum=100
+vnum=600
 range=250
 seghop=2
 CarryTimeThreshold=20
-DistanceRange=500
+DistanceRange=3500

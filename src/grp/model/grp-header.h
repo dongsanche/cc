@@ -175,8 +175,8 @@ public:
   enum MessageType
   {
 	HELLO_MESSAGE = 1,
-  CPACK_MESSAGE = 2,
-  CP_MESSAGE=3,
+  CPACK_MESSAGE = 3,
+  CP_MESSAGE=2,
   };
 
   MessageHeader ();
@@ -446,10 +446,7 @@ public:
 
         void SetLifetime(int t)
         {
-            if(this->Lifetime<(uint16_t)t)
-            {
-                this->Lifetime=t;
-            }
+            this->Lifetime=t;
         }
 
         int GetLifetime() const

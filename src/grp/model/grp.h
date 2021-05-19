@@ -22,7 +22,8 @@
 #include "ns3/digitalMap.h"
 #include "ns3/myserver.h"
 
-
+extern double scores[49][49];
+extern double lifetime[49][49];
 namespace ns3 {
 
 struct PacketQueueEntry
@@ -254,10 +255,10 @@ private:
 
     int cp_currentJID=-1;
     int cp_nextJID=-1;
-    double lifetime[49][49]={INT32_MAX}; //生存时间
+    //double lifetime[49][49]={INT32_MAX}; //生存时间
     // int NTOTAL=0;  //总车辆数
     // int NH=0;       //总跳数
-    int scores[49][49];  //路段得分
+    //double scores[49][49];  //路段得分
     int cp_mid=-1;       //初始节点
     Time cp_time;      //初始时间
     
