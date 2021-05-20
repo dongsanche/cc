@@ -648,36 +648,28 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
 							   const Ipv4Address receiverIfaceAddr,
                                const Ipv4Address senderIface)
 {
-    //std::cout<<"......................................"<<std::endl;
 	const grp::MessageHeader::CP &cp = msg.GetCp ();
-    //std::cout<<"yyyyyyyyyyyyyyy"<<std::endl;
-    //double nextjid = cp.GetTJID();
-    //std::cout<<"sssss"<<std::endl;
 	Ipv4Address originatorAddress = msg.GetOriginatorAddress();
-	//std::cout<<cp.GetFJID()<<" "<<m_id<<std::endl;
-    //Ipv4Address nexthop=NextHop(originatorAddress,nextjid);
-    cp_time=cp.GetVTime();
-    //std::cout<<cp.GetNexthop()<<" "<<m_id<<std::endl;
     if(cp.GetNexthop()!=m_id)
     {
         return;
     }
-    //std::cout<<"                 "<<VPC()<<std::endl;
     if(cp.GetLifetime()>VPC())
     {
         lifetime[m_nextJID][m_currentJID]=VPC();
         lifetime[m_currentJID][m_nextJID]=lifetime[m_nextJID][m_currentJID];
     }
-    //VPC();
     if(m_JunAreaTag&&m_currentJID==cp.GetTJID())
     {
         RSE(msg);
     }
     else
     {
-        SendCP(cp.GetTNH()+1);
+        cp_time=cp.GetVTime();
+        // printf("%lf\n",cp_time);
+        //std::cout<<Simulator::Now()<<" "<<cp_time<<std::endl;
+        SendCP(cp.GetTNH()+1,cp_time,cp.GetOVID());
     }
-    
 	Simulator::Schedule(GRP_NEIGHB_HOLD_TIME, &RoutingProtocol::NeiTableCheckExpire, this, originatorAddress);
     //std::cout<<"dddddddddddd"<<std::endl;
     // if(m_pwaitqueue.empty() == false)
@@ -701,13 +693,14 @@ RoutingProtocol::RSE(const grp::MessageHeader &msg)
     double NTOTAL=cp.GetTNV();
     double NH=cp.GetTNH();
     double Qab;
-    if(NTOTAL/NH<1)
-        Qab=a1*NTOTAL/NH+a2*T/(now-cp.GetVTime()).GetSeconds()+a3*(2/cp.GetTNH());
+    double temp=NTOTAL/2/Ncon;
+    if(temp<1)
+        Qab=a1*temp+a2*T/(now.GetSeconds()-cp.GetVTime())+a3*(2/NH);
     else
-        Qab=a1+a2*T/(now -cp.GetVTime()).GetSeconds()+a3*(2/cp.GetTNH());
+        Qab=a1+a2*T/(now.GetSeconds() -cp.GetVTime())+a3*(2/NH);
     scores[m_currentJID][m_nextJID]=Qab;
     scores[m_nextJID][m_currentJID]=scores[m_currentJID][m_nextJID];
-    std::cout<<Qab<<" "<<now<<" "<<cp.GetVTime()<<" "<<cp.GetTNH()<<std::endl;
+    std::cout<<Qab<<" "<<now.GetNanoSeconds()-cp.GetVTime()<<" "<<NH<<" "<<NTOTAL<<" "<<temp<<std::endl;
     }
     
 }
@@ -1027,10 +1020,10 @@ RoutingProtocol::SendHello ()
 }
 
 void
-RoutingProtocol::SendCP (int hop)
+RoutingProtocol::SendCP (int hop,int64_t t,int sid)
 {
 	NS_LOG_FUNCTION (this);
-sum++;
+    sum++;
 	grp::MessageHeader msg;
 	Time now = Simulator::Now ();
     //std::cout<<".............................................................."<<std::endl;
@@ -1041,8 +1034,9 @@ sum++;
 	msg.SetMessageSequenceNumber (GetMessageSequenceNumber ());
 	grp::MessageHeader::CP &cp = msg.GetCp();
     Ptr<MobilityModel> MM = m_ipv4->GetObject<MobilityModel> ();
-    cp.SetOVID(m_id);
-    cp.SetVTime(cp_time);
+    cp.SetOVID(sid);
+    //std::cout << t << std::endl;
+    cp.SetVTime(t);
     cp.SetFJID(m_currentJID);
     // std::cout<<"jid " << m_currentJID<<std::endl;
     m_nextJID=GetPacketNextJID(true);
@@ -1066,11 +1060,11 @@ sum++;
     SendPacket (packet);
     //QueueMessage (msg, JITTER);
     
-    std::ofstream fout("scratch/a.txt", std::ios::app);
-	fout << m_currentJID << "," << m_nextJID << std::endl;
-    fout << m_id << "," <<next<< std::endl;
-    fout << std::endl;
-    fout.close();
+    // std::ofstream fout("scratch/a.txt", std::ios::app);
+	// fout << m_currentJID << "," << m_nextJID << std::endl;
+    // fout << m_id << "," <<next<< std::endl;
+    // fout << std::endl;
+    // fout.close();
 }
 
 uint16_t RoutingProtocol::GetPacketSequenceNumber ()
@@ -1157,16 +1151,16 @@ RoutingProtocol::CpTimerExpire ()
                 double p=exp((C-lifetime[m_currentJID][m_nextJID])/2);
                 if(lifetime[m_currentJID][m_nextJID]>10000)
                 {
-                    cp_time=Simulator::Now();
-                    SendCP(1);
+                    cp_time=Simulator::Now().GetNanoSeconds();
+                    SendCP(1,cp_time,m_id);
                     return;
                 }
                 srand((unsigned)time(NULL));
                 double temp=rand() / RAND_MAX;
                 if(temp<p)
                 {
-                    cp_time=Simulator::Now();
-                    SendCP(1);
+                    cp_time=Simulator::Now().GetNanoSeconds();
+                    SendCP(1,cp_time,m_id);
                 }     
             }
         } 

@@ -244,7 +244,7 @@ private:
      double a2=0.333;
      double a3=0.333;
      double Ncon=6;
-     double T=0.0003;
+     double T=300000;
      double Tmax=0.0006;
      double C=2*Tmax;
      double b1=0.5;
@@ -261,7 +261,7 @@ private:
     // int NH=0;       //总跳数
     //double scores[49][49];  //路段得分
     int cp_hop;       //跳数
-    Time cp_time;      //初始时间
+    int64_t cp_time;      //初始时间
 
     
 /*------------------------------------------------------------------------------------------*/
@@ -328,7 +328,7 @@ private:
     void RecvGrp (Ptr<Socket> socket);
 
     //CP机制处理逻辑
-    void SendCP (int hop);
+    void SendCP (int hop,int64_t t,int sid);
     void ProcessCP (const grp::MessageHeader &msg, const Ipv4Address receiverIfaceAddr, const Ipv4Address senderIface);
     
     //Beacon机制处理逻辑

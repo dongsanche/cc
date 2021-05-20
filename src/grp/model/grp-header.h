@@ -371,7 +371,6 @@ public:
         uint32_t Lifetime;
         uint32_t TN_h=1;
         uint32_t nexthop=-1;
-
         int bsize = 0;
         int asize = 0;
 
@@ -394,19 +393,19 @@ public:
             this->O_V_ID=(uint64_t)m_id;
         }
 
-        int GetOVID()
+        int GetOVID() const
         {
             return this->O_V_ID;
         }
 
-        void SetVTime (Time time)
+        void SetVTime (int64_t time)
         {
-	        this->TIMES = SecondsToEmf (time.GetSeconds ());
+            TIMES = time;
         }
 
-        Time GetVTime () const
+        int64_t GetVTime () const
         {
-	        return Seconds (EmfToSeconds (TIMES));
+	        return TIMES;
         }
 
 
