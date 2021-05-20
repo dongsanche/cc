@@ -240,7 +240,7 @@ private:
     //template <typename T>
 
 /*************************配置信息***************************************/
-     double a1=0.333;
+     double a1=1;
      double a2=0.333;
      double a3=0.333;
      double Ncon=6;

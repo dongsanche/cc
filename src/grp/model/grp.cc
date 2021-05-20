@@ -695,9 +695,9 @@ RoutingProtocol::RSE(const grp::MessageHeader &msg)
     double Qab;
     double temp=NTOTAL/2/Ncon;
     if(temp<1)
-        Qab=a1*temp+a2*T/(now.GetSeconds()-cp.GetVTime())+a3*(2/NH);
+        Qab=a1*temp+a2*T*NH/(now.GetNanoSeconds()-cp.GetVTime())+a3*(2/NH);
     else
-        Qab=a1+a2*T/(now.GetSeconds() -cp.GetVTime())+a3*(2/NH);
+        Qab=a1+a2*T*NH/(now.GetNanoSeconds() -cp.GetVTime())+a3*(2/NH);
     scores[m_currentJID][m_nextJID]=Qab;
     scores[m_nextJID][m_currentJID]=scores[m_currentJID][m_nextJID];
     std::cout<<Qab<<" "<<now.GetNanoSeconds()-cp.GetVTime()<<" "<<NH<<" "<<NTOTAL<<" "<<temp<<std::endl;
@@ -1547,7 +1547,7 @@ RoutingProtocol::GetPacketNextJID(bool tag)
     if(cjid == m_rsujid)
         return cjid;
     int nextjid = -1;
-    int maxx=-10000000;
+    double tempmax=-10000000;
     for(int i = 0; i < m_JuncNum; i++)
     {
         if(isAdjacentVex(i, m_currentJID) == true&&i!=m_currentJID)
@@ -1562,14 +1562,15 @@ RoutingProtocol::GetPacketNextJID(bool tag)
             //std::cout<<temp<<"    权值"<<std::endl;
             //std::cout<<sqrt(pow(nextjx-m_map[m_rsujid].x, 2)+pow(nextjy-m_map[m_rsujid].y, 2))<<"    j距离"<<std::endl;
             //std::cout<<sqrt(pow(njx-m_map[m_rsujid].x, 2)+pow(njy-m_map[m_rsujid].y, 2))<<"    i距离"<<std::endl;
-            if(temp>maxx)
+            if(temp>tempmax)
             {
-                maxx=temp;
+                //std::cout<<temp<<"..........................."<<tempmax<<std::endl;
+                tempmax=temp;
                 nextjid=i;
             }
         }
     }
-    //std::cout<<"ssss"<<nextjid<<" "<<cjid<<" "<<m_currentJID<<std::endl;
+    //std::cout<<"ssss"<<nextjid<<" "<<cjid<<" "<<m_currentJID<<" "<<tempmax<<std::endl;
     return nextjid;
 }
 
