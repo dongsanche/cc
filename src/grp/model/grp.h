@@ -22,8 +22,8 @@
 #include "ns3/digitalMap.h"
 #include "ns3/myserver.h"
 
-extern double scores[49][49];
-extern double lifetime[49][49];
+// extern double scores[49][49];
+// extern double lifetime[49][49];
 namespace ns3 {
 
 struct PacketQueueEntry
@@ -240,14 +240,14 @@ private:
     //template <typename T>
 
 /*************************配置信息***************************************/
-     double a1=1;
+     double a1=0.333;
      double a2=0.333;
      double a3=0.333;
      double Ncon=6;
      double T=300000;
-     double Tmax=0.0006;
+     double Tmax=0.006;
      double C=2*Tmax;
-     double b1=0.5;
+     double b1=5;
      double b2=0.5;
 
 
@@ -311,7 +311,7 @@ private:
 
     int NextHop(int dest, int dstjid);
     int nexthop(int djid);
-
+    int NextJID(bool tag);
     int GetNextJID(bool tag);
 
     //路段间路由采用迪杰斯特拉最短路径算法计算最优的下一路由路段
@@ -328,7 +328,7 @@ private:
     void RecvGrp (Ptr<Socket> socket);
 
     //CP机制处理逻辑
-    void SendCP (int hop,int64_t t,int sid);
+    void SendCP (int hop,int64_t t,int sid,int njid);
     void ProcessCP (const grp::MessageHeader &msg, const Ipv4Address receiverIfaceAddr, const Ipv4Address senderIface);
     
     //Beacon机制处理逻辑

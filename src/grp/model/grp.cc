@@ -267,14 +267,6 @@ void RoutingProtocol::DoInitialize ()
             Graph[i][j] = INF;
         }
     }
-    for(int i=0;i<49;i++)
-    {
-        for(int j=0;j<49;j++)
-        {
-            lifetime[i][j]=100000000;
-            //std::cout<<i<<" "<<j<<std::endl;
-        }
-    }
 
 	DigitalMap map;
 	std::string mapfile = "TestScenaries/" + std::to_string(vnum) + "/6x6_map.csv";
@@ -654,10 +646,11 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
     {
         return;
     }
-    if(cp.GetLifetime()>VPC())
+    //std::cout<<cp.GetLifetime()<<" "<<VPC()<<"................."<<std::endl;
+    if(cp.GetLifetime()>VPC()||cp.GetLifetime()==0)
     {
-        lifetime[m_nextJID][m_currentJID]=VPC();
-        lifetime[m_currentJID][m_nextJID]=lifetime[m_nextJID][m_currentJID];
+        lifetime[cp.GetTJID()][m_currentJID]=VPC();
+        lifetime[m_currentJID][cp.GetTJID()]=lifetime[cp.GetTJID()][m_currentJID];
     }
     if(m_JunAreaTag&&m_currentJID==cp.GetTJID())
     {
@@ -668,7 +661,7 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
         cp_time=cp.GetVTime();
         // printf("%lf\n",cp_time);
         //std::cout<<Simulator::Now()<<" "<<cp_time<<std::endl;
-        SendCP(cp.GetTNH()+1,cp_time,cp.GetOVID());
+        SendCP(cp.GetTNH()+1,cp_time,cp.GetOVID(),cp.GetTJID());
     }
 	Simulator::Schedule(GRP_NEIGHB_HOLD_TIME, &RoutingProtocol::NeiTableCheckExpire, this, originatorAddress);
     //std::cout<<"dddddddddddd"<<std::endl;
@@ -698,8 +691,8 @@ RoutingProtocol::RSE(const grp::MessageHeader &msg)
         Qab=a1*temp+a2*T*NH/(now.GetNanoSeconds()-cp.GetVTime())+a3*(2/NH);
     else
         Qab=a1+a2*T*NH/(now.GetNanoSeconds() -cp.GetVTime())+a3*(2/NH);
-    scores[m_currentJID][m_nextJID]=Qab;
-    scores[m_nextJID][m_currentJID]=scores[m_currentJID][m_nextJID];
+    scores[cp.GetFJID()][cp.GetTJID()]=Qab;
+    scores[cp.GetTJID()][cp.GetFJID()]=scores[cp.GetFJID()][cp.GetTJID()];
     std::cout<<Qab<<" "<<now.GetNanoSeconds()-cp.GetVTime()<<" "<<NH<<" "<<NTOTAL<<" "<<temp<<std::endl;
     }
     
@@ -779,11 +772,12 @@ RoutingProtocol:: VPC()
         }
         else
         {
-            t=(InsightTransRange+sqrt(pow(cx-nx, 2) + pow(cy-ny, 2)))/(m_speed+itr->second.N_speed);
+            t=(InsightTransRange+sqrt(pow(cx-nx, 2) + pow(cy-ny, 2)))/(m_speed+itr->second.N_speed*3.6);
         }
+        //std::cout<<"ddddddddddddd         "<<t<<std::endl;
     }
     else
-    {//std::cout<<"sssssssssssssss"<<std::endl;
+    {
         bool f=false;
         for (std::map<Ipv4Address, NeighborTableEntry>::const_iterator i = m_neiTable.begin (); i != m_neiTable.end (); i++)
         {
@@ -796,17 +790,18 @@ RoutingProtocol:: VPC()
         {
             if(pow(cx-vnx, 2) + pow(cy-vny, 2)<pow(cx-vpx, 2) + pow(cy-vpy, 2))
             {
-                t=(InsightTransRange+sqrt(pow(vpx-vnx, 2) + pow(vpy-vny, 2)))/(ivn->second.N_speed+ivp->second.N_speed);
+                t=(InsightTransRange+sqrt(pow(vpx-vnx, 2) + pow(vpy-vny, 2)))/(ivn->second.N_speed+ivp->second.N_speed)/3.6;
             }
             else
             {
-                t=(InsightTransRange-sqrt(pow(vpx-vnx, 2) + pow(vpy-vny, 2)))/(ivn->second.N_speed+ivp->second.N_speed);
+                t=(InsightTransRange-sqrt(pow(vpx-vnx, 2) + pow(vpy-vny, 2)))/(ivn->second.N_speed+ivp->second.N_speed)/3.6;
             }
         }
         else
         {
-            t=(sqrt(pow(cx-vnx, 2) + pow(cy-vny, 2)))/ivn->second.N_speed;
+            t=(sqrt(pow(cx-vnx, 2) + pow(cy-vny, 2)))/ivn->second.N_speed/3.6;
         }
+        //std::cout<<"sssssssssssssss            "<<t<<std::endl;
     }
     //std::cout<<lifetime[m_currentJID][m_nextJID]<<std::endl;
     if(t<lifetime[m_currentJID][m_nextJID]&&lifetime[m_currentJID][m_nextJID]>0)
@@ -814,7 +809,7 @@ RoutingProtocol:: VPC()
         lifetime[m_currentJID][m_nextJID]=t;
         lifetime[m_nextJID][m_currentJID]=lifetime[m_currentJID][m_nextJID];
     }
-    else if(lifetime[m_currentJID][m_nextJID]<0)
+    else if(lifetime[m_currentJID][m_nextJID]<=0)
     {
         lifetime[m_currentJID][m_nextJID]=t;
         lifetime[m_nextJID][m_currentJID]=lifetime[m_currentJID][m_nextJID];
@@ -1020,7 +1015,7 @@ RoutingProtocol::SendHello ()
 }
 
 void
-RoutingProtocol::SendCP (int hop,int64_t t,int sid)
+RoutingProtocol::SendCP (int hop,int64_t t,int sid,int njid)
 {
 	NS_LOG_FUNCTION (this);
     sum++;
@@ -1039,13 +1034,13 @@ RoutingProtocol::SendCP (int hop,int64_t t,int sid)
     cp.SetVTime(t);
     cp.SetFJID(m_currentJID);
     // std::cout<<"jid " << m_currentJID<<std::endl;
-    m_nextJID=GetPacketNextJID(true);
-    int next=nexthop(m_nextJID);
+    //m_nextJID=GetPacketNextJID(true);
+    int next=nexthop(njid);
     cp.SetNexthop(next);
     //std::cout<<next<<" "<<cp.GetNexthop()<<std::endl;
-    cp.SetTJID(m_nextJID);
+    cp.SetTJID(njid);
     cp.SetTNV(m_neiTable.size());
-    cp.SetLifetime(lifetime[m_nextJID][m_currentJID]);
+    cp.SetLifetime(lifetime[njid][m_currentJID]);
     cp.SetTNH(hop);
 	//QueueMessage (msg, JITTER);
     Ptr<Packet> packet = Create<Packet> ();
@@ -1115,6 +1110,7 @@ RoutingProtocol::CheckPositionExpire()
         if(disToNextJun < JunAreaRadius)
         {
             m_JunAreaTag = true;
+            CpTimerExpire();
         }
     }
     else
@@ -1132,12 +1128,13 @@ void
 RoutingProtocol::HelloTimerExpire ()
 {
   SendHello ();
-  if(m_JunAreaTag)
-  {
-      CpTimerExpire();
-  }
+//   if(m_JunAreaTag)
+//   {
+//       CpTimerExpire();
+//   }
   m_helloTimer.Schedule (m_helloInterval);
 }
+
 
 void
 RoutingProtocol::CpTimerExpire ()
@@ -1148,19 +1145,24 @@ RoutingProtocol::CpTimerExpire ()
         {
             if(isAdjacentVex(m_currentJID,i))
             {
-                double p=exp((C-lifetime[m_currentJID][m_nextJID])/2);
-                if(lifetime[m_currentJID][m_nextJID]>10000)
-                {
-                    cp_time=Simulator::Now().GetNanoSeconds();
-                    SendCP(1,cp_time,m_id);
-                    return;
-                }
+                double p;
+                if(C>lifetime[m_currentJID][i])
+                    p=1;
+                else
+                    p=exp((C-lifetime[m_currentJID][i])/2);
+                // if(lifetime[m_currentJID][m_nextJID]>10000)
+                // {
+                //     cp_time=Simulator::Now().GetNanoSeconds();
+                //     SendCP(1,cp_time,m_id);
+                //     return;
+                // }
                 srand((unsigned)time(NULL));
                 double temp=rand() / RAND_MAX;
+                //std::cout<<C<<" "<<lifetime[m_currentJID][i]<<" "<<p<<std::endl;
                 if(temp<p)
                 {
                     cp_time=Simulator::Now().GetNanoSeconds();
-                    SendCP(1,cp_time,m_id);
+                    SendCP(1,cp_time,m_id,i);
                 }     
             }
         } 
@@ -1550,20 +1552,27 @@ RoutingProtocol::GetPacketNextJID(bool tag)
     double tempmax=-10000000;
     for(int i = 0; i < m_JuncNum; i++)
     {
+        // if(scores[i][m_currentJID]==0)
+        // {
+        //     return NextJID(true);
+        // }
+        //std::cout<<"ffff"<<std::endl;
         if(isAdjacentVex(i, m_currentJID) == true&&i!=m_currentJID)
         {
             double njx=m_map[m_currentJID].x;
             double njy=m_map[m_currentJID].y;
             double nextjx=m_map[i].x;
             double nextjy=m_map[i].y;
-            
+            double dj=sqrt(pow(nextjx-m_map[m_rsujid].x, 2)+pow(nextjy-m_map[m_rsujid].y, 2));
+            double di=sqrt(pow(njx-m_map[m_rsujid].x, 2)+pow(njy-m_map[m_rsujid].y, 2));
             //std::cout<<"ssdddddddd "<<scores[i][m_currentJID]<<std::endl;
-            double temp=b1*(1-sqrt(pow(nextjx-m_map[m_rsujid].x, 2)+pow(nextjy-m_map[m_rsujid].y, 2))/sqrt(pow(njx-m_map[m_rsujid].x, 2)+pow(njy-m_map[m_rsujid].y, 2)))+b2*scores[i][m_currentJID];
+            double temp=b1*(1-dj/di)+b2*scores[i][m_currentJID];
             //std::cout<<temp<<"    权值"<<std::endl;
             //std::cout<<sqrt(pow(nextjx-m_map[m_rsujid].x, 2)+pow(nextjy-m_map[m_rsujid].y, 2))<<"    j距离"<<std::endl;
-            //std::cout<<sqrt(pow(njx-m_map[m_rsujid].x, 2)+pow(njy-m_map[m_rsujid].y, 2))<<"    i距离"<<std::endl;
+            std::cout<<dj<<" "<<di<<"  .............  "<<scores[i][m_currentJID]<<std::endl;
             if(temp>tempmax)
             {
+                
                 //std::cout<<temp<<"..........................."<<tempmax<<std::endl;
                 tempmax=temp;
                 nextjid=i;
@@ -1571,40 +1580,41 @@ RoutingProtocol::GetPacketNextJID(bool tag)
         }
     }
     //std::cout<<"ssss"<<nextjid<<" "<<cjid<<" "<<m_currentJID<<" "<<tempmax<<std::endl;
+    m_nextJID=nextjid;
     return nextjid;
 }
 
 
 
-// int
-// RoutingProtocol::GetPacketNextJID(bool tag)
-// {
-//     int cjid = GetNearestJID();
+int
+RoutingProtocol::NextJID(bool tag)
+{
+    int cjid = GetNearestJID();
 
-//     if(cjid == m_rsujid)
-//         return cjid;
+    if(cjid == m_rsujid)
+        return cjid;
 
-//     int nextjid = -1;
+    int nextjid = -1;
 
-//     for(int i = 0; i < m_JuncNum; i++)
-//     {
-//         for(int j = i + 1; j < m_JuncNum; j++)
-//         {
-//             if(isAdjacentVex(i, j) == false)
-//             {
-//                 Graph[i][j] = Graph[j][i] = INF;
-//             }
-//             else
-//             {
-//                 Graph[i][j] = Graph[j][i] = 1;
-//             }
-//         }
-//     }
+    for(int i = 0; i < m_JuncNum; i++)
+    {
+        for(int j = i + 1; j < m_JuncNum; j++)
+        {
+            if(isAdjacentVex(i, j) == false)
+            {
+                Graph[i][j] = Graph[j][i] = INF;
+            }
+            else
+            {
+                Graph[i][j] = Graph[j][i] = 1;
+            }
+        }
+    }
 
-//     nextjid = DijkstraAlgorithm(cjid, m_rsujid);
+    nextjid = DijkstraAlgorithm(cjid, m_rsujid);
 
-//     return nextjid;
-// }
+    return nextjid;
+}
 
 // bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
 //                                    const Ipv4Header &header, Ptr<const NetDevice> idev,
