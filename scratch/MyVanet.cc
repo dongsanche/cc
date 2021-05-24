@@ -37,6 +37,7 @@ NS_LOG_COMPONENT_DEFINE ("MyFirstNS3");
 
 int recount = 0;
 int DropCount = 0;
+int sumcount=0;
 int SendCount = 0;
 int StoreCount = 0;
 int OutErrCount = 0;
@@ -337,27 +338,33 @@ void ReceivePacket (Ptr<Socket> socket)
 void
 DropPacket (Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Header &header )
 {
-	// NS_LOG_UNCOND ("d " << Simulator::Now ().GetSeconds () << " " << context << " "
-	// 		<< AddrToID(header.GetSource()) << " > " << AddrToID(header.GetDestination()) << " "
-	// 		<< "id " << header.GetIdentification());
-	// *stream->GetStream () << "d " << Simulator::Now ().GetSeconds () << " " << context << " "
-	// 		<< header.GetSource() << " > " << header.GetDestination() << " "
-	// 		<< "id " << header.GetIdentification()
-	// 		<< std::endl;
-	// DropCount++;
+	NS_LOG_UNCOND ("d " << Simulator::Now ().GetSeconds () << " " << context << " "
+			<< AddrToID(header.GetSource()) << " > " << AddrToID(header.GetDestination()) << " "
+			<< "id " << header.GetIdentification());
+	*stream->GetStream () << "d " << Simulator::Now ().GetSeconds () << " " << context << " "
+			<< header.GetSource() << " > " << header.GetDestination() << " "
+			<< "id " << header.GetIdentification()
+			<< std::endl;
+	DropCount++;
+}
+
+void
+sumpacket ( )
+{
+	sumcount++;
 }
 
 void
 StorePacket (Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Header &header)
 {
- 	// StoreCount ++;
- 	// NS_LOG_UNCOND ("s " << Simulator::Now ().GetSeconds () << " " << context << " "
- 	// 			<< header.GetSource() << " > " << header.GetDestination() << " "
- 	// 			<< "id " << header.GetIdentification());
- 	// *stream->GetStream () << "s " << Simulator::Now ().GetSeconds () << " " << context << " "
- 	// 			<< header.GetSource() << " > " << header.GetDestination() << " "
- 	// 			<< "id " << header.GetIdentification()
- 	// 			<< std::endl;
+ 	StoreCount ++;
+ 	NS_LOG_UNCOND ("s " << Simulator::Now ().GetSeconds () << " " << context << " "
+ 				<< header.GetSource() << " > " << header.GetDestination() << " "
+ 				<< "id " << header.GetIdentification());
+ 	*stream->GetStream () << "s " << Simulator::Now ().GetSeconds () << " " << context << " "
+ 				<< header.GetSource() << " > " << header.GetDestination() << " "
+ 				<< "id " << header.GetIdentification()
+ 				<< std::endl;
 
 }
 
@@ -537,7 +544,7 @@ int main (int argc, char *argv[])
     //设置仿真时间
     SimulationStopTime = 160;
     //在指定时间指定发送节点向指定目标节点发送一个数据包，用以测试算法正确性
-	// Simulator::Schedule(Seconds(27.5), &SendSpecificPacket, 179, nNodes);	
+	//Simulator::Schedule(Seconds(27.5), &SendSpecificPacket, 346, nNodes);	
     //大规模发包测试，指定传输开始时间，具体的发送方式可以只有指定，当前文件前面定义呢多个测试函数，见上	
     Simulator::Schedule(Seconds(20), &SendTestPacketToLC_DIS);     							
 
@@ -548,6 +555,7 @@ int main (int argc, char *argv[])
     Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream ("scratch/grp-trace.tr");
     Config::Connect("/NodeList/*/$ns3::grp::RoutingProtocol/DropPacket", MakeBoundCallback(&DropPacket, stream));
     Config::Connect("/NodeList/*/$ns3::grp::RoutingProtocol/StorePacket", MakeBoundCallback(&StorePacket, stream));
+    //Config::Connect("/NodeList/*/$ns3::grp::RoutingProtocol/sumpacket", MakeBoundCallback(&sumpacket));
 
     // 记录网络运行数据，可以使用NetAnim查看这些数据 
     AnimationInterface anim ("scratch/myvanet.xml");
@@ -575,38 +583,37 @@ int main (int argc, char *argv[])
     std::cout<<"Simulation results";
     std::cout<<"Sent:"<< SendCount << " Received:" << recount 
 		<< " Drop:" << DropCount << " delay:" << (double)allTime/recount/1000000 << "ms";
-    std::cout<<"Store Error: " << lc - DropCount<<std::endl;
+    std::cout<<"Store Error: " << lc - DropCount<<" sum:"<<sumcount<<std::endl;
 
     //将统计数据输出到文件中
     std::ofstream fout("scratch/range.csv", std::ios::app);
 	fout <<idx <<","<<nNodes << "," << DistanceRange << "," << hops << "," << CarryTimeThreshold << "     ";
     fout << "receive:"<<(recount * 1.0 / SendCount) << "  "<<"delay:" << (double)allTime/recount/1000000<<" "<<sum<<endl;
-
     //fout << std::endl;
     fout.close();
-    // std::ofstream ffout("scratch/b.txt", std::ios::app);
-	// for(int i=0;i<49;i++)
-    // {
-    //     for(int j=0;j<49;j++)
-    //     {
-    //         ffout<<scores[i][j]<<" ";
-    //     }
-    //     ffout<<endl;
-    // }
-
-    //fout << std::endl;
-    //ffout.close();
-
-    std::ofstream ffout("scratch/b.txt", std::ios::app);
+    std::ofstream ffout("scratch/c.txt", std::ios::app);
 	for(int i=0;i<49;i++)
     {
         for(int j=0;j<49;j++)
         {
             ffout<<lifetime[i][j]<<" ";
         }
-        ffout<<std::endl;
+        ffout<<endl;
     }
-    ffout.close();
+
+    //fout << std::endl;
+    //ffout.close();
+
+    // std::ofstream ffout("scratch/b.txt", std::ios::app);
+	// for(int i=0;i<49;i++)
+    // {
+    //     for(int j=0;j<49;j++)
+    //     {
+    //         ffout<<lifetime[i][j]<<" ";
+    //     }
+    //     ffout<<std::endl;
+    // }
+    // ffout.close();
 
     return 0;
 }

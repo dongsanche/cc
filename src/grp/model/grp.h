@@ -159,6 +159,7 @@ public:
 
     typedef void (* m_DropPacketTraceCallback)(const Ipv4Header &header);
     typedef void (* m_StorePacketTraceCallback)(const Ipv4Header &header);
+    typedef void (* m_sumPacketTraceCallback)(const Ipv4Header &header);
 
 protected:
     virtual void DoInitialize (void);  
@@ -200,7 +201,7 @@ private:
     bool m_jqueuetag[49];
     int m_JuncNum=49;
     int m_rsujid = 45;
-    Ipv4Address m_rsuip=Ipv4Address("10.1.0.101");
+    Ipv4Address m_rsuip=Ipv4Address("10.1.2.89");
     double startTime = 5;
     double OutsightTransRange = 100;
     double RoadLength = 500;
@@ -208,7 +209,7 @@ private:
     double PositionCheckThreshold = 11;
     double RoadWidth = 10;
     double JunAreaRadius = 50;
-                            
+    int m_lastjid=0;      
     std::string confile = "scratch/conf.txt";
 /*------------------------------------------------------------------------------------------*/
 
@@ -240,14 +241,14 @@ private:
     //template <typename T>
 
 /*************************配置信息***************************************/
-     double a1=0.333;
-     double a2=0.333;
-     double a3=0.333;
+     double a1=10;
+     double a2=10;
+     double a3=10;
      double Ncon=6;
      double T=300000;
      double Tmax=0.006;
      double C=2*Tmax;
-     double b1=5;
+     double b1=0.5;
      double b2=0.5;
 
 
@@ -271,6 +272,7 @@ private:
 /*------------------------------------------------------------------------------------------*/
     //根据车辆的IPv4地址获取其对应的车辆编号m_id
     int AddrToID(Ipv4Address);
+    Ipv4Address idtoaddr(int id);
 
 /*------------------------------------------------------------------------------------------*/
     //初始化车辆的编号m_id和起始位置
@@ -285,7 +287,7 @@ private:
     //获取车辆的坐标信息
     Vector GetPosition(Ipv4Address adr); 
     //计算链接持续时间
-    double VPC();
+    double VPC(int next,int sjid);
 
     //计算道路得分
     void RSE(const grp::MessageHeader &msg);
@@ -310,7 +312,7 @@ private:
     Ipv4Address IntraPathRouting(Ipv4Address dest, int dstjid);
 
     int NextHop(int dest, int dstjid);
-    int nexthop(int djid);
+    int Nexthop(int djid,int sjid);
     int NextJID(bool tag);
     int GetNextJID(bool tag);
 
@@ -328,7 +330,7 @@ private:
     void RecvGrp (Ptr<Socket> socket);
 
     //CP机制处理逻辑
-    void SendCP (int hop,int64_t t,int sid,int njid);
+    void SendCP (int hop,int64_t t,int sid,int njid,int sjid,int nhop);
     void ProcessCP (const grp::MessageHeader &msg, const Ipv4Address receiverIfaceAddr, const Ipv4Address senderIface);
     
     //Beacon机制处理逻辑
