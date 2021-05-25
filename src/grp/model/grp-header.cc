@@ -5,7 +5,7 @@
 #include "ns3/log.h"
 #include "grp-header.h"
 
-#define GRP_DATA_PKT_HEADER_SIZE 3
+#define GRP_DATA_PKT_HEADER_SIZE 5
 #define GRP_CTR_PKT_HEADER_SIZE 4
 #define GRP_BLOCK_PKT_HEADER_SIZE 24
 #define GRP_MSG_HEADER_SIZE 12
@@ -244,6 +244,7 @@ DataPacketHeader::Serialize (Buffer::Iterator start) const
   Buffer::Iterator i = start;
   i.WriteU8 (nextjid);
   i.WriteU16 (sender);
+  i.WriteU16 (sendjid);
 }
 
 uint32_t
@@ -252,6 +253,7 @@ DataPacketHeader::Deserialize (Buffer::Iterator start)
   Buffer::Iterator i = start;
   nextjid  = i.ReadU8 ();
   sender = i.ReadU16 ();
+  sendjid=i.ReadU16 ();
   return GetSerializedSize ();
 }
 

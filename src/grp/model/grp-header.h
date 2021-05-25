@@ -140,10 +140,20 @@ public:
   {
       return sender;
   }
+  void SetSendjid(int id)
+  {
+      sendjid = id;
+  }
+
+  int GetSendjid() const
+  {
+      return sendjid;
+  }
 
 private:
   uint8_t nextjid;
   uint16_t sender;
+  uint16_t sendjid;
 
 
 public:

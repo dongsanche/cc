@@ -209,7 +209,7 @@ private:
     double PositionCheckThreshold = 11;
     double RoadWidth = 10;
     double JunAreaRadius = 50;
-    int m_lastjid=0;      
+    int m_lastjid=-1;      
     std::string confile = "scratch/conf.txt";
 /*------------------------------------------------------------------------------------------*/
 
@@ -263,7 +263,8 @@ private:
     //double scores[49][49];  //路段得分
     int cp_hop;       //跳数
     int64_t cp_time;      //初始时间
-
+    double scores[49][49]={0};
+    double lifetime[49][49];
     
 /*------------------------------------------------------------------------------------------*/
     //从配置文件读取实验运行参数
@@ -307,7 +308,7 @@ private:
 /*------------------------------------------------------------------------------------------*/
 //路由方法实现，分为路段间路由和路段内路由
     //路段间路由，为数据包挑选合适的下一个传输路段
-    int GetPacketNextJID(bool tag);
+    int GetPacketNextJID(int lastjid);
     //路段内路由，数据包在路段内传播时的路由方法，即如何再路段内挑选数据包的下一跳  
     Ipv4Address IntraPathRouting(Ipv4Address dest, int dstjid);
 
@@ -330,7 +331,7 @@ private:
     void RecvGrp (Ptr<Socket> socket);
 
     //CP机制处理逻辑
-    void SendCP (int hop,int64_t t,int sid,int njid,int sjid,int nhop);
+    void SendCP (double hop,int64_t t,int sid,int njid,int sjid,int nhop);
     void ProcessCP (const grp::MessageHeader &msg, const Ipv4Address receiverIfaceAddr, const Ipv4Address senderIface);
     
     //Beacon机制处理逻辑
