@@ -30,8 +30,6 @@
 #include "grp.h"
 using namespace ns3;
 using namespace std;
-extern double scores[49][49];
-extern double lifetime[49][49];
 int sum;
 NS_LOG_COMPONENT_DEFINE ("MyFirstNS3");
 
@@ -544,9 +542,9 @@ int main (int argc, char *argv[])
     //设置仿真时间
     SimulationStopTime = 160;
     //在指定时间指定发送节点向指定目标节点发送一个数据包，用以测试算法正确性
-	Simulator::Schedule(Seconds(27.5), &SendSpecificPacket, 187, nNodes);	
+	///Simulator::Schedule(Seconds(27.5), &SendSpecificPacket, 187, nNodes);	
     //大规模发包测试，指定传输开始时间，具体的发送方式可以只有指定，当前文件前面定义呢多个测试函数，见上	
-    //Simulator::Schedule(Seconds(20), &SendTestPacketToLC_DIS);     							
+    Simulator::Schedule(Seconds(20), &SendTestPacketToLC_DIS);     							
 
 /* ----------------------------------------------配置数据记录---------------------------------------------------*/
 

@@ -37,7 +37,7 @@ steplen = 500
 max=6000
 
 c = 0
-for k in range(500,6500,500):
+for k in range(3000,6500,500):
     sfile = open("scratch/conf.txt",'w')
     sfile.write("idx=" + str(1) + "\r\nvnum=600\r\nrange=250\r\nseghop=2\r\nenable-etar=false\r\nCarryTimeThreshold=20\r\nDistanceRange="+str(k))
     sfile.close()

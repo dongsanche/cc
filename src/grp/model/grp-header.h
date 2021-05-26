@@ -153,7 +153,7 @@ public:
 private:
   uint8_t nextjid;
   uint16_t sender;
-  uint16_t sendjid;
+  uint16_t sendjid=255;
 
 
 public:
@@ -455,10 +455,10 @@ public:
 
         void SetLifetime(int t)
         {
-            this->Lifetime=t;
+            Lifetime=t;
         }
 
-        int GetLifetime() const
+        double GetLifetime() const
         {
             return this->Lifetime;
         }

@@ -524,6 +524,8 @@ RoutingProtocol::CheckPacketQueue()
         //nextHop = NextHop(dest, nextjid);
 
         DataPacketHeader.SetNextJID(nextjid);
+        if(m_JunAreaTag)
+            DataPacketHeader.SetSendjid(m_currentJID);
         qentry.m_packet->AddHeader (DataPacketHeader);
 
   		if(nextHop == loopback)
@@ -700,7 +702,8 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
             return;
         SendCP(cp.GetTNH()+1,cp_time,cp.GetOVID(),cp.GetTJID(),cp.GetFJID(),AddrToID(next));
     }
-
+    lifetime[cp.GetTJID()][cp.GetFJID()]=0;
+    lifetime[cp.GetFJID()][cp.GetTJID()]=lifetime[cp.GetTJID()][cp.GetFJID()];
 }
 /*
 
@@ -1249,8 +1252,10 @@ void
 RoutingProtocol::AddHeader (Ptr<Packet> p, Ipv4Address source, Ipv4Address destination, uint8_t protocol, Ptr<Ipv4Route> route)
 {
 	Ipv4Mask brocastMask("0.0.255.255");
+    // std::cout<<"bbbbbbbbbbbbbbbbbbbbbbb\n"<<destination<<std::endl;
 	if (brocastMask.IsMatch(destination, Ipv4Address("0.0.255.255")) == false)
 	{
+        std::cout<<Simulator::Now().GetSeconds()<<  "aaaaaaaaaaaaaaaaaaaaaaaa\n";
 		Ptr<MobilityModel> MM = m_ipv4->GetObject<MobilityModel> ();
         double cx = MM->GetPosition ().x;
         double cy = MM->GetPosition ().y;
@@ -1343,10 +1348,10 @@ RoutingProtocol::IntraPathRouting(Ipv4Address dest,  int dstjid)
     //double dis=mindis;
 	for (std::map<Ipv4Address, NeighborTableEntry>::const_iterator i = m_neiTable.begin (); i != m_neiTable.end (); i++)
 	{
-		// if(i->second.N_status == NeighborTableEntry::STATUS_NOT_SYM)
-		// {
-		// 	continue;
-		// }
+		if(i->second.N_status == NeighborTableEntry::STATUS_NOT_SYM)
+		{
+			continue;
+		}
 
 		double nx = i->second.N_location_x;
 		double ny = i->second.N_location_y;
@@ -1586,6 +1591,10 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
         }
         if(isAdjacentVex(i, m_currentJID) == true&&i!=m_currentJID)
         {
+            if(i==m_rsujid)
+            {
+                return i;
+            }
             double njx=m_map[m_currentJID].x;
             double njy=m_map[m_currentJID].y;
             double nextjx=m_map[i].x;
@@ -1811,14 +1820,15 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
     grp::DataPacketHeader DHeader;
 	Ipv4Address loopback ("127.0.0.1");
 	Ptr<Packet> packet = p->Copy ();
-	grp::DataPacketHeader DataPacketHeader;
-	packet->RemoveHeader (DataPacketHeader);
-	int nextjid = (int)DataPacketHeader.GetNextJID();
-    int senderID = DataPacketHeader.GetSenderID();
+	packet->RemoveHeader (DHeader);
+	int nextjid = (int)DHeader.GetNextJID();
+    int senderID = DHeader.GetSenderID();
     //如果接收到数据包的车辆刚好位于路口范围内，则先进行路段间路由为数据包选定下一路由路段
+    //DHeader.SetSendjid(0xff);
     if(m_JunAreaTag == true)
     {
-        nextjid = GetPacketNextJID(DataPacketHeader.GetSenderID());
+        nextjid = GetPacketNextJID(DHeader.GetSendjid());
+        //std::cout<<DHeader.GetSendjid()<<" "<<nextjid<<std::endl;
         DHeader.SetSendjid(m_currentJID);
         
         //NS_LOG_UNCOND((int)DataPacketHeader.GetNextJID());
@@ -1830,7 +1840,7 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
     //路段内路由，为数据包选定下一跳节点
     //std::cout<<nextjid<<" "<<"ttttttttttSSSSSS"<<std::endl;
 	Ipv4Address nextHop = IntraPathRouting(dest, nextjid);
-    std::cout<<m_id<<" "<<AddrToID(nextHop)<<" "<<m_lastjid<<" "<<m_currentJID<<" "<<nextjid<<std::endl;
+    std::cout<<Simulator::Now().GetSeconds()<<" "<<m_id<<" "<<AddrToID(nextHop)<<" "<<m_currentJID<<" "<<nextjid<<" "<<m_nextJID<<std::endl;
     //Ipv4Address nextHop = NextHop(dest, nextjid);
     
 	//NS_LOG_UNCOND("" << Simulator::Now().GetSeconds() << " " << m_id << "->" << AddrToID(nextHop));
@@ -1875,7 +1885,6 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
         else
         {
             //如果下一跳是自己的上一跳，则可能出现了路由回路，可能导致TTL的快速消耗，故暂缓发送数据包
-            grp::DataPacketHeader DHeader;
             DHeader.SetNextJID(nextjid);
             DHeader.SetSenderID(m_id);		
             packet->AddHeader(DHeader);
@@ -1888,7 +1897,6 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
 	{
         //如果返回的IPv4地址为127.0.0.1，则说明当前时刻没有合适的下一跳节点
         //节点启用Carry_and_forward机制，将数据包暂时缓存起来，直到有可用下一跳节点或信息过期为止
-        grp::DataPacketHeader DHeader;
   		DHeader.SetNextJID(nextjid);	
         DHeader.SetSenderID(m_id);	
   		packet->AddHeader(DHeader);		
