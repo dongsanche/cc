@@ -583,7 +583,7 @@ int main (int argc, char *argv[])
 		<< " Drop:" << DropCount << " delay:" << (double)allTime/recount/1000000 << "ms";
     std::cout<<"Store Error: " << lc - DropCount<<" sum:"<<sumcount<<std::endl;
 
-    //将统计数据输出到文件中
+    //将统计数据输出到文件中c
     std::ofstream fout("scratch/range.csv", std::ios::app);
 	fout <<idx <<","<<nNodes << "," << DistanceRange << "," << hops << "," << CarryTimeThreshold << "     ";
     fout << "receive:"<<(recount * 1.0 / SendCount) << "  "<<"delay:" << (double)allTime/recount/1000000<<" "<<sum<<endl;

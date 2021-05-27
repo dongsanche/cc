@@ -1262,7 +1262,7 @@ RoutingProtocol::AddHeader (Ptr<Packet> p, Ipv4Address source, Ipv4Address desti
     // std::cout<<"bbbbbbbbbbbbbbbbbbbbbbb\n"<<destination<<std::endl;
 	if (brocastMask.IsMatch(destination, Ipv4Address("0.0.255.255")) == false)
 	{
-        std::cout<<Simulator::Now().GetSeconds()<<  "aaaaaaaaaaaaaaaaaaaaaaaa\n";
+        //std::cout<<Simulator::Now().GetSeconds()<<  "aaaaaaaaaaaaaaaaaaaaaaaa\n";
 		Ptr<MobilityModel> MM = m_ipv4->GetObject<MobilityModel> ();
         double cx = MM->GetPosition ().x;
         double cy = MM->GetPosition ().y;
@@ -1573,62 +1573,116 @@ RoutingProtocol::DijkstraAlgorithm(int srcjid, int dstjid)
 }
 
 
+// int
+// RoutingProtocol::GetPacketNextJID(int lastjid)
+// {
+//     //std::cout<<"dddddddddddffffffffffff"<<std::endl;
+//     int cjid = GetNearestJID();
+//     if(cjid == m_rsujid)
+//         return cjid;
+//     int nextjid = -1;
+//     double tempmax=-10000000;
+//     //double tempdis,tempsco;
+//     for(auto i=m_map[m_currentJID].outedge.begin();i!=m_map[m_currentJID].outedge.end();i++)
+//     {
+//         double nextjx=m_map[i->first].x;
+//         double nextjy=m_map[i->first].y;
+//         double djx=m_map[m_rsujid].x;
+//         double djy=m_map[m_rsujid].y;
+//         double njx=m_map[m_currentJID].x;
+//         double njy=m_map[m_currentJID].y;
+//         double dj=abs(nextjx-djx)+abs(nextjy-djy);
+//         double di=abs(njx-djx)+abs(njy-djy);
+//         double temp=b1*(1-dj/di)+b2*scores[i->first][m_currentJID];
+//        if(temp>tempmax)
+//         {
+//             tempmax=temp;
+//             nextjid=i->first;
+//         }
+//     }
+
+//     return nextjid;
+// }
+
 int
 RoutingProtocol::GetPacketNextJID(int lastjid)
 {
-    //std::cout<<"dddddddddddffffffffffff"<<std::endl;
-    if(m_currentJID==m_rsujid)
-        return m_rsujid;
     int cjid = GetNearestJID();
+    if(m_currentJID==m_rsujid)
+    {
+        return m_rsujid;
+    }
     if(cjid == m_rsujid)
         return cjid;
+
     int nextjid = -1;
-    double tempmax=-10000000;
-    //double tempdis,tempsco;
-    for(int i = 0; i < m_JuncNum; i++)
+
+    // for(int i = 0; i < m_JuncNum; i++)
+    // {
+    //     for(int j = i + 1; j < m_JuncNum; j++)
+    //     {
+    //         if(isAdjacentVex(i, j) == false)
+    //         {
+    //             Graph[i][j] = Graph[j][i] = INF;
+    //         }
+    //         else
+    //         {
+    //             Graph[i][j] = Graph[j][i] = 1;
+    //         }
+    //     }
+    // }
+
+    // nextjid = DijkstraAlgorithm(cjid, m_rsujid);
+    int max=0;
+    // for(int i=0;i<m_JuncNum;i++)
+    // {
+    //     if(isAdjacentVex(i,m_currentJID))
+    //     {
+    //         double nextjx=m_map[i].x;
+    //         double nextjy=m_map[i].y;
+    //         double djx=m_map[m_rsujid].x;
+    //         double djy=m_map[m_rsujid].y;
+    //         if(pow(nextjx-djx, 2)+pow(nextjy-djy, 2)<max)
+    //         {
+    //             max=pow(nextjx-djx, 2)+pow(nextjy-djy, 2);
+    //             nextjid=i;
+    //         }
+    //     }
+    // }
+    for(auto i=m_map[m_currentJID].outedge.begin();i!=m_map[m_currentJID].outedge.end();i++)
     {
-        // if(scores[i][m_currentJID]==0)
+        // if(i->first==lastjid)
         // {
-        //     return NextJID(true);
+        //     continue;
         // }
-        //std::cout<<"ffff"<<std::endl;
-        if(lastjid==i)
+        double nextjx=m_map[i->first].x;
+        double nextjy=m_map[i->first].y;
+        double djx=m_map[m_rsujid].x;
+        double djy=m_map[m_rsujid].y;
+        double njx=m_map[m_currentJID].x;
+        double njy=m_map[m_currentJID].y;
+        // double dj=pow(nextjx-djx, 2)+pow(nextjy-djy, 2);
+        // double di=pow(njx-djx, 2)+pow(njy-djy, 2);
+        double dj=abs(nextjx-djx)+abs(nextjy-djy);
+        double di=abs(njx-djx)+abs(njy-djy);
+        double temp;
+        if(scores[i->first][m_currentJID]==0)
         {
-            continue;
+            temp=(1-dj/di);
         }
-        if(isAdjacentVex(i, m_currentJID) == true&&i!=m_currentJID)
-        {
-            if(i==m_rsujid)
-            {
-                return i;
-            }
-            double njx=m_map[m_currentJID].x;
-            double njy=m_map[m_currentJID].y;
-            double nextjx=m_map[i].x;
-            double nextjy=m_map[i].y;
-            double dj=sqrt(pow(nextjx-m_map[m_rsujid].x, 2)+pow(nextjy-m_map[m_rsujid].y, 2));
-            double di=sqrt(pow(njx-m_map[m_rsujid].x, 2)+pow(njy-m_map[m_rsujid].y, 2));
-            //std::cout<<"ssdddddddd "<<scores[i][m_currentJID]<<std::endl;
-            double temp=b1*(1-dj/di)+b2*scores[i][m_currentJID];
-            //std::cout<<temp<<"    权值"<<std::endl;
-            //std::cout<<sqrt(pow(nextjx-m_map[m_rsujid].x, 2)+pow(nextjy-m_map[m_rsujid].y, 2))<<"    j距离"<<std::endl;
-            //ffout<<dj<<" "<<di<<" "<<1-dj/di<<"  .............  "<<scores[i][m_currentJID]<<std::endl;
-            if(temp>tempmax)
-            {
-                //std::cout<<temp<<"..........................."<<tempmax<<std::endl;
-                //tempdis=1-dj/di;
-                //tempsco=scores[i][m_currentJID];
-                tempmax=temp;
-                nextjid=i;
-            }
+        else{
+            temp=b1*(1-dj/di)+b2*scores[i->first][m_currentJID];
+        }
+        
+       if(temp>max)
+        {std::cout<<1-dj/di<<" "<<scores[i->first][m_currentJID]<<std::endl;
+            max=temp;
+            nextjid=i->first;
         }
     }
-    //ffout<<tempdis<<"  .............  "<<tempsco<<std::endl;
-    //std::cout<<"ssss"<<nextjid<<" "<<cjid<<" "<<m_currentJID<<" "<<tempmax<<std::endl;
+
     return nextjid;
 }
-
-
 
 int
 RoutingProtocol::NextJID(bool tag)
@@ -1847,7 +1901,7 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
     //路段内路由，为数据包选定下一跳节点
     //std::cout<<nextjid<<" "<<"ttttttttttSSSSSS"<<std::endl;
 	Ipv4Address nextHop = IntraPathRouting(dest, nextjid);
-    std::cout<<Simulator::Now().GetSeconds()<<" "<<m_id<<" "<<AddrToID(nextHop)<<" "<<m_currentJID<<" "<<nextjid<<" "<<m_nextJID<<std::endl;
+    // std::cout<<Simulator::Now().GetSeconds()<<" "<<m_id<<" "<<AddrToID(nextHop)<<" "<<m_currentJID<<" "<<nextjid<<" "<<m_nextJID<<std::endl;
     //Ipv4Address nextHop = NextHop(dest, nextjid);
     
 	//NS_LOG_UNCOND("" << Simulator::Now().GetSeconds() << " " << m_id << "->" << AddrToID(nextHop));

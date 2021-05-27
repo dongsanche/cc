@@ -248,8 +248,8 @@ private:
      double T=300000;
      double Tmax=0.006;
      double C=2*Tmax;
-     double b1=0;
-     double b2=1;
+     double b1=0.5;
+     double b2=0.5;
 
 
 
