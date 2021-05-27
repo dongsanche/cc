@@ -655,19 +655,20 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
     {
         return;
     }
-    if(cp.GetNexthop()!=m_id)
-    {
-        return;
-    }
     if(cp.GetNexthop()==-1)
     {
+        //sum++;
+        //std::cout<<Simulator::Now()<<std::endl;
         lifetime[cp.GetFJID()][cp.GetTJID()]=cp.GetLifetime();
         lifetime[cp.GetTJID()][cp.GetFJID()]=cp.GetLifetime();
         scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH();
         scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
         return;
     }
-    
+    if(cp.GetNexthop()!=m_id)
+    {
+        return;
+    }
     if(cp.GetOVID()==-1)
     {
         if(m_JunAreaTag&&m_currentJID==cp.GetTJID())
@@ -678,6 +679,13 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
             scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
             return;
         }
+        // else
+        // {
+        //     lifetime[cp.GetFJID()][cp.GetTJID()]=cp.GetLifetime();
+        //     lifetime[cp.GetTJID()][cp.GetFJID()]=cp.GetLifetime();
+        //     scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH();
+        //     scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
+        // }
     }
     double tt=VPC(cp.GetTJID(),cp.GetFJID());
     Time now=Simulator::Now();
@@ -695,7 +703,6 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
     {
         cp_time=cp.GetVTime();
         // printf("%lf\n",cp_time);
-        
         Ipv4Address next=IntraPathRouting(m_rsuip,cp.GetTJID());
         //std::cout<<cp.GetTNH()<<" "<<cp.GetOVID()<<" "<<m_id<<" "<<AddrToID(next)<<" "<<cp.GetFJID()<<" "<<cp.GetTJID()<<" "<<m_currentJID<<std::endl;
         if(next=="127.0.0.1")
