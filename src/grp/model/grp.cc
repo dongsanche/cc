@@ -655,7 +655,7 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
     {
         return;
     }
-    if(cp.GetNexthop()==-1)
+    if(cp.GetNexthop()==-2)
     {
         //sum++;
         //std::cout<<Simulator::Now()<<std::endl;
@@ -665,31 +665,32 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
         scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
         return;
     }
+    if(cp.GetOVID()==-1)
+    {
+        if(m_currentJID==cp.GetTJID()||m_currentJID==cp.GetFJID())
+        {
+            if(m_JunAreaTag&&m_currentJID==cp.GetTJID())
+            {
+                lifetime[cp.GetFJID()][cp.GetTJID()]=cp.GetLifetime();
+                lifetime[cp.GetTJID()][cp.GetFJID()]=cp.GetLifetime();
+                scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH();
+                scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
+                SendCP(cp.GetTNH(),lifetime[cp.GetTJID()][cp.GetFJID()],m_id,cp.GetFJID(),cp.GetTJID(),-2);
+                return;
+            }
+        }
+        else
+        {
+            return;
+        }
+    }
     if(cp.GetNexthop()!=m_id)
     {
         return;
     }
-    if(cp.GetOVID()==-1)
-    {
-        if(m_JunAreaTag&&m_currentJID==cp.GetTJID())
-        {
-            lifetime[cp.GetFJID()][cp.GetTJID()]=cp.GetLifetime();
-            lifetime[cp.GetTJID()][cp.GetFJID()]=cp.GetLifetime();
-            scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH();
-            scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
-            return;
-        }
-        // else
-        // {
-        //     lifetime[cp.GetFJID()][cp.GetTJID()]=cp.GetLifetime();
-        //     lifetime[cp.GetTJID()][cp.GetFJID()]=cp.GetLifetime();
-        //     scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH();
-        //     scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
-        // }
-    }
     double tt=VPC(cp.GetTJID(),cp.GetFJID());
     Time now=Simulator::Now();
-    if(cp.GetLifetime()-now.GetSeconds()>tt||cp.GetLifetime()==0)
+    if(cp.GetLifetime()-now.GetSeconds()>tt||cp.GetLifetime()==0||lifetime[cp.GetTJID()][cp.GetFJID()]==0)
     {
         lifetime[cp.GetTJID()][cp.GetFJID()]=tt+now.GetSeconds();
         lifetime[cp.GetFJID()][cp.GetTJID()]=lifetime[cp.GetTJID()][cp.GetFJID()];
@@ -707,7 +708,19 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
         //std::cout<<cp.GetTNH()<<" "<<cp.GetOVID()<<" "<<m_id<<" "<<AddrToID(next)<<" "<<cp.GetFJID()<<" "<<cp.GetTJID()<<" "<<m_currentJID<<std::endl;
         if(next=="127.0.0.1")
             return;
-        SendCP(cp.GetTNH()+1,cp_time,cp.GetOVID(),cp.GetTJID(),cp.GetFJID(),AddrToID(next));
+        if(cp.GetOVID()==-1)
+        {
+            lifetime[cp.GetFJID()][cp.GetTJID()]=cp.GetLifetime();
+            lifetime[cp.GetTJID()][cp.GetFJID()]=cp.GetLifetime();
+            scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH();
+            scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
+            SendCP(cp.GetTNH(),cp_time,cp.GetOVID(),cp.GetTJID(),cp.GetFJID(),AddrToID(next));
+            
+        }
+        else
+        {
+            SendCP(cp.GetTNH()+1,cp_time,cp.GetOVID(),cp.GetTJID(),cp.GetFJID(),AddrToID(next));
+        }
     }
     lifetime[cp.GetTJID()][cp.GetFJID()]=0;
     lifetime[cp.GetFJID()][cp.GetTJID()]=lifetime[cp.GetTJID()][cp.GetFJID()];
@@ -724,7 +737,7 @@ RoutingProtocol::RSE(const grp::MessageHeader &msg)
     {
         const grp::MessageHeader::CP &cp = msg.GetCp ();
     double NTOTAL=0;
-    double NH=cp.GetTNH();
+    double NH=cp.GetTNH()+1;
     Time now=Simulator::Now();
     //std::cout<<"      s   "<<m_mainAddress<<std::endl;
     //std::cout<<now<<" "<<lifetime[cp.GetTJID()][m_currentJID]<<" "<<tt<<" "<<cp.GetTJID()<<" "<<cp.GetFJID()<<std::endl;
@@ -746,10 +759,11 @@ RoutingProtocol::RSE(const grp::MessageHeader &msg)
         Qab=a1+a2*T*NH/(now.GetNanoSeconds() -cp.GetVTime())+a3*(2/NH);
     scores[cp.GetFJID()][cp.GetTJID()]=Qab/30;
     scores[cp.GetTJID()][cp.GetFJID()]=scores[cp.GetFJID()][cp.GetTJID()];
-    fout<<Qab<<" "<<now.GetSeconds()<<" "<<NH<<" "<<NTOTAL<<" "<<cp.GetFJID()<<" "<<cp.GetTJID()<<" "<<m_currentJID<<" "<<lifetime[cp.GetFJID()][cp.GetTJID()]<<std::endl;
-    SendCP(Qab/30,lifetime[cp.GetTJID()][cp.GetFJID()],m_id,cp.GetFJID(),cp.GetTJID(),-1);
+    fout<<Qab/30<<" "<<temp<<" "<<T*NH/(now.GetNanoSeconds()-cp.GetVTime())<<" "<<NTOTAL<<" "<<NH<<" "<<" "<<lifetime[cp.GetFJID()][cp.GetTJID()]<<std::endl;
+    //fout<<NH<<" "<<T*NH<<"   "<<now.GetNanoSeconds() -cp.GetVTime()<<std::endl;
+    SendCP(Qab/30,lifetime[cp.GetTJID()][cp.GetFJID()],m_id,cp.GetFJID(),cp.GetTJID(),-2);
     int next=AddrToID(IntraPathRouting(m_rsuip,cp.GetFJID()));
-    SendCP(Qab/30,lifetime[cp.GetTJID()][cp.GetFJID()],-1,cp.GetFJID(),cp.GetTJID(),next);
+    SendCP(Qab/30,lifetime[cp.GetTJID()][cp.GetFJID()],-1,cp.GetTJID(),cp.GetFJID(),next);
     }
     
 }
@@ -1651,10 +1665,10 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
     // }
     for(auto i=m_map[m_currentJID].outedge.begin();i!=m_map[m_currentJID].outedge.end();i++)
     {
-        // if(i->first==lastjid)
-        // {
-        //     continue;
-        // }
+        if(i->first==lastjid)
+        {
+            continue;
+        }
         double nextjx=m_map[i->first].x;
         double nextjy=m_map[i->first].y;
         double djx=m_map[m_rsujid].x;

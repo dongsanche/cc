@@ -4,4 +4,4 @@ range=250
 seghop=2
 enable-etar=false
 CarryTimeThreshold=20
-DistanceRange=3000
+DistanceRange=6000
