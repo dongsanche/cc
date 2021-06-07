@@ -22,8 +22,8 @@
 #include "ns3/digitalMap.h"
 #include "ns3/myserver.h"
 
-// extern double scores[49][49];
-// extern double lifetime[49][49];
+// extern double scores[54][54];
+// extern double lifetime[54][54];
 namespace ns3 {
 
 struct PacketQueueEntry
@@ -198,11 +198,11 @@ private:
 
 /*------------------------------------------------------------------------------------------*/
     //以下参数需要根据实际运行情况调整
-    bool m_jqueuetag[49];
-    int m_JuncNum=49;
-    int m_rsujid = 45;
+    bool m_jqueuetag[54];
+    int m_JuncNum=54;
+    int m_rsujid = 36;
     Ipv4Address m_rsuip=Ipv4Address("10.1.2.89");
-    double startTime = 5;
+    double startTime = 0;
     double OutsightTransRange = 100;
     double RoadLength = 500;
     double turnLightRange = 50;
@@ -257,14 +257,14 @@ private:
 
     int cp_currentJID=-1;
     int cp_nextJID=-1;
-    //double lifetime[49][49]={INT32_MAX}; //生存时间
+    //double lifetime[54][54]={INT32_MAX}; //生存时间
     // int NTOTAL=0;  //总车辆数
     // int NH=0;       //总跳数
-    //double scores[49][49];  //路段得分
+    //double scores[54][54];  //路段得分
     int cp_hop;       //跳数
     int64_t cp_time;      //初始时间
-    double scores[49][49]={0};
-    double lifetime[49][49];
+    double scores[54][54]={0};
+    double lifetime[54][54];
     
 /*------------------------------------------------------------------------------------------*/
     //从配置文件读取实验运行参数
@@ -318,7 +318,7 @@ private:
     int GetNextJID(bool tag);
 
     //路段间路由采用迪杰斯特拉最短路径算法计算最优的下一路由路段
-    int DijkstraAlgorithm(int srcjid, int dstjid);
+    double DijkstraAlgorithm(int srcjid, int dstjid);
     //用以在迪杰斯特拉算法中确定某两个路口是否是相邻
     bool isAdjacentVex(int sjid, int ejid);
     //用以确认邻居车辆是否位于两个指定路口所形成的矩形区域内

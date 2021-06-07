@@ -273,8 +273,8 @@ void RoutingProtocol::DoInitialize ()
     }
 
 	DigitalMap map;
-	std::string mapfile = "TestScenaries/" + std::to_string(vnum) + "/6x6_map.csv";
-    std::string tracefile = "TestScenaries/" + std::to_string(vnum) + "/6x6_vtrace.csv";
+	std::string mapfile = "TestScenaries/hefei/hefei_map.csv";
+    std::string tracefile = "TestScenaries/hefei/hefei_vtrace.csv";
 	map.setMapFilePath(mapfile);
 	map.readMapFromCsv(m_map);
 	map.readTraceCsv(tracefile, m_tracelist);
@@ -1532,7 +1532,7 @@ RoutingProtocol::RouteOutput (Ptr<Packet> p, const Ipv4Header &header, Ptr<NetDe
 	return rtentry;
 }
 
-int
+double
 RoutingProtocol::DijkstraAlgorithm(int srcjid, int dstjid)
 {
     bool visited[m_JuncNum];
@@ -1551,9 +1551,10 @@ RoutingProtocol::DijkstraAlgorithm(int srcjid, int dstjid)
 
     int curr = srcjid;
     int next = -1;
+    double min=INF;
     for(int count = 1; curr >= 0 && count <= m_JuncNum; count++)
     {
-        double min = INF;
+        min = INF;
         for(int n = 0; n < m_JuncNum; n++)
         {
             if(visited[n] == false)
@@ -1575,15 +1576,16 @@ RoutingProtocol::DijkstraAlgorithm(int srcjid, int dstjid)
         visited[curr] = true;
     }
 
-    int jid = dstjid;
-    while(jid > 0)
-    {
-        if(parent[jid] == srcjid)
-            break;
-        jid = parent[jid];
-    }
+    // int jid = dstjid;
+    // while(jid > 0)
+    // {
+    //     if(parent[jid] == srcjid)
+    //         break;
+    //     jid = parent[jid];
+    // }
 
-    return jid; 
+    // return jid; 
+    return min;
 }
 
 
@@ -1631,20 +1633,20 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
 
     int nextjid = -1;
 
-    // for(int i = 0; i < m_JuncNum; i++)
-    // {
-    //     for(int j = i + 1; j < m_JuncNum; j++)
-    //     {
-    //         if(isAdjacentVex(i, j) == false)
-    //         {
-    //             Graph[i][j] = Graph[j][i] = INF;
-    //         }
-    //         else
-    //         {
-    //             Graph[i][j] = Graph[j][i] = 1;
-    //         }
-    //     }
-    // }
+    for(int i = 0; i < m_JuncNum; i++)
+    {
+        for(int j = i + 1; j < m_JuncNum; j++)
+        {
+            if(isAdjacentVex(i, j) == false)
+            {
+                Graph[i][j] = Graph[j][i] = m_map[i].outedge[j][1];
+            }
+            else
+            {
+                Graph[i][j] = Graph[j][i] = 1;
+            }
+        }
+    }
 
     // nextjid = DijkstraAlgorithm(cjid, m_rsujid);
     int max=0;
@@ -1677,8 +1679,10 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
         double njy=m_map[m_currentJID].y;
         // double dj=pow(nextjx-djx, 2)+pow(nextjy-djy, 2);
         // double di=pow(njx-djx, 2)+pow(njy-djy, 2);
-        double dj=abs(nextjx-djx)+abs(nextjy-djy);
-        double di=abs(njx-djx)+abs(njy-djy);
+        // double dj=abs(nextjx-djx)+abs(nextjy-djy);
+        // double di=abs(njx-djx)+abs(njy-djy);
+        double dj=DijkstraAlgorithm(i->first,m_rsujid);
+        double di=DijkstraAlgorithm(m_currentJID,m_rsujid);
         double temp;
         if(scores[i->first][m_currentJID]==0)
         {
