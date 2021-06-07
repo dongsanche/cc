@@ -34,6 +34,7 @@
 int sum=0;
 std::ofstream fout("scratch/a.txt", std::ios::app);
 std::ofstream ffout("scratch/b.txt", std::ios::app);
+std::ofstream out("scratch/c.txt", std::ios::app);
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("GrpRoutingProtocol");
@@ -59,9 +60,9 @@ RoutingProtocol::GetTypeId (void)
     .AddTraceSource ("StorePacket", "Store and carry data packets.",
                 MakeTraceSourceAccessor (&RoutingProtocol::m_StorePacketTrace),
                 "ns3::grp::RoutingProtocol::m_StorePacketTraceCallback")
-    // .AddTraceSource ("sumpacket", "sum packets.",
-    //             MakeTraceSourceAccessor (&RoutingProtocol::m_sumPacketTrace),
-    //             "ns3::grp::RoutingProtocol::m_sumPacketTraceCallback")
+    .AddTraceSource ("sumpacket", "sum packets.",
+                MakeTraceSourceAccessor (&RoutingProtocol::m_sumPacketTrace),
+                "ns3::grp::RoutingProtocol::m_sumPacketTraceCallback")
   ;
   return tid;
 }
@@ -651,18 +652,18 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
     {
         return;
     }
-    if(cp.GetTNH()>7)
-    {
-        return;
-    }
+    // if(cp.GetTNH()>7)
+    // {
+    //     return;
+    // }
     if(cp.GetNexthop()==-2)
     {
-        //sum++;
-        //std::cout<<Simulator::Now()<<std::endl;
+        //out<<Simulator::Now()<<" "<<m_id<<" "<<cp.GetFJID()<<" "<<cp.GetTJID()<<" "<<cp.GetTNH()<<std::endl;
         lifetime[cp.GetFJID()][cp.GetTJID()]=cp.GetLifetime();
         lifetime[cp.GetTJID()][cp.GetFJID()]=cp.GetLifetime();
-        scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH();
-        scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
+        //std::cout<<cp.GetLifetime()<<std::endl;
+        scores[cp.GetFJID()][cp.GetTJID()]=(double)cp.GetTNH()/1000;
+        scores[cp.GetTJID()][cp.GetFJID()]=(double)cp.GetTNH()/1000;
         return;
     }
     if(cp.GetOVID()==-1)
@@ -673,15 +674,11 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
             {
                 lifetime[cp.GetFJID()][cp.GetTJID()]=cp.GetLifetime();
                 lifetime[cp.GetTJID()][cp.GetFJID()]=cp.GetLifetime();
-                scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH();
-                scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
+                scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH()/1000;
+                scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH()/1000;
                 SendCP(cp.GetTNH(),lifetime[cp.GetTJID()][cp.GetFJID()],m_id,cp.GetFJID(),cp.GetTJID(),-2);
                 return;
             }
-        }
-        else
-        {
-            return;
         }
     }
     if(cp.GetNexthop()!=m_id)
@@ -712,8 +709,8 @@ RoutingProtocol::ProcessCP (const grp::MessageHeader &msg,
         {
             lifetime[cp.GetFJID()][cp.GetTJID()]=cp.GetLifetime();
             lifetime[cp.GetTJID()][cp.GetFJID()]=cp.GetLifetime();
-            scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH();
-            scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH();
+            scores[cp.GetFJID()][cp.GetTJID()]=cp.GetTNH()/1000;
+            scores[cp.GetTJID()][cp.GetFJID()]=cp.GetTNH()/1000;
             SendCP(cp.GetTNH(),cp_time,cp.GetOVID(),cp.GetTJID(),cp.GetFJID(),AddrToID(next));
             
         }
@@ -759,11 +756,11 @@ RoutingProtocol::RSE(const grp::MessageHeader &msg)
         Qab=a1+a2*T*NH/(now.GetNanoSeconds() -cp.GetVTime())+a3*(2/NH);
     scores[cp.GetFJID()][cp.GetTJID()]=Qab/30;
     scores[cp.GetTJID()][cp.GetFJID()]=scores[cp.GetFJID()][cp.GetTJID()];
-    fout<<Qab/30<<" "<<temp<<" "<<T*NH/(now.GetNanoSeconds()-cp.GetVTime())<<" "<<NTOTAL<<" "<<NH<<" "<<" "<<lifetime[cp.GetFJID()][cp.GetTJID()]<<std::endl;
+    //fout<<Qab/30<<" "<<temp<<" "<<(now.GetNanoSeconds()-cp.GetVTime())/NH<<" "<<NTOTAL<<" "<<NH<<" "<<" "<<lifetime[cp.GetFJID()][cp.GetTJID()]<<" "<<now.GetSeconds()<<std::endl;
     //fout<<NH<<" "<<T*NH<<"   "<<now.GetNanoSeconds() -cp.GetVTime()<<std::endl;
-    SendCP(Qab/30,lifetime[cp.GetTJID()][cp.GetFJID()],m_id,cp.GetFJID(),cp.GetTJID(),-2);
+    SendCP(Qab/30*1000,lifetime[cp.GetTJID()][cp.GetFJID()],m_id,cp.GetFJID(),cp.GetTJID(),-2);
     int next=AddrToID(IntraPathRouting(m_rsuip,cp.GetFJID()));
-    SendCP(Qab/30,lifetime[cp.GetTJID()][cp.GetFJID()],-1,cp.GetTJID(),cp.GetFJID(),next);
+    SendCP(Qab/30*1000,lifetime[cp.GetTJID()][cp.GetFJID()],-1,cp.GetTJID(),cp.GetFJID(),next);
     }
     
 }
@@ -963,7 +960,7 @@ RoutingProtocol::Nexthop(int djid,int sjid)
     
     Ipv4Address nextHop=Ipv4Address("127.0.0.1");;
     double mindis = sqrt(pow(cx-jx, 2) + pow(cy-jy, 2));
-    double dis=mindis;
+    //double dis=mindis;
     if(m_neiTable.size()==0)
     {
         return -1;
@@ -995,7 +992,7 @@ RoutingProtocol::Nexthop(int djid,int sjid)
     {
         return -1;
     }
-    ffout<<m_id<<"  "<<AddrToID(nextHop)<<" "<<dis-mindis<<"  "<<m_neiTable.size()<<" "<<sjid<<" "<<djid<<std::endl;
+    //ffout<<m_id<<"  "<<AddrToID(nextHop)<<" "<<dis-mindis<<"  "<<m_neiTable.size()<<" "<<sjid<<" "<<djid<<std::endl;
     return AddrToID(nextHop);
 }
 
@@ -1042,16 +1039,18 @@ RoutingProtocol::SendCP (double hop,int64_t t,int sid,int njid,int sjid,int nhop
 	msg.SetTimeToLive (1);
 	msg.SetHopCount (0);
 	msg.SetMessageSequenceNumber (GetMessageSequenceNumber ());
-    //m_sumPacketTrace();
+    const Ipv4Header temp;
+    m_sumPacketTrace(temp);
 	grp::MessageHeader::CP &cp = msg.GetCp();
     Ptr<MobilityModel> MM = m_ipv4->GetObject<MobilityModel> ();
-    if(nhop==-1)
+    if(nhop==-2)
     {
         cp.SetLifetime(t);
     }
     else
     {
-        cp.SetVTime(t);    
+        cp.SetVTime(t); 
+        cp.SetLifetime(lifetime[njid][m_currentJID]);   
     }
     cp.SetNexthop(nhop);
     cp.SetOVID(sid);
@@ -1060,7 +1059,6 @@ RoutingProtocol::SendCP (double hop,int64_t t,int sid,int njid,int sjid,int nhop
     //std::cout<<next<<" "<<cp.GetNexthop()<<std::endl;
     cp.SetTJID(njid);
     cp.SetTNV(m_neiTable.size());
-    cp.SetLifetime(lifetime[njid][m_currentJID]);
     cp.SetTNH(hop);
 	//QueueMessage (msg, JITTER);
     Ptr<Packet> packet = Create<Packet> ();
@@ -1135,14 +1133,16 @@ RoutingProtocol::CheckPositionExpire()
         if(disToNextJun > JunAreaRadius && disToCurrJun > JunAreaRadius)
         {
             
-            Time now=Simulator::Now();
+            
             //if(now.GetSeconds()>20)
-            m_JunAreaTag = false;
+            
             {
+                Time now=Simulator::Now();
                 Simulator::Schedule(Seconds(0.01),&RoutingProtocol::CpTimerExpire,this);
         
                 //CpTimerExpire();
             }
+            m_JunAreaTag = false;
         }
     }
     
@@ -1157,8 +1157,15 @@ RoutingProtocol::HelloTimerExpire ()
 //   {
 //       CpTimerExpire();
 //   }
+if(m_pwaitqueue.empty() == false)
+ 	{
+ 		CheckPacketQueue();
+ 	}
   m_helloTimer.Schedule (m_helloInterval);
+
+
 }
+
 
 
 void
@@ -1196,6 +1203,7 @@ RoutingProtocol::CpTimerExpire ()
                 // }
                 srand((unsigned)time(NULL));
                 double temp=rand() / RAND_MAX;
+                //std::cout<<p<<std::endl;
                 //std::cout<<C<<" "<<lifetime[m_currentJID][i]<<" "<<p<<std::endl;
                 if(temp<p)
                 {
@@ -1647,7 +1655,7 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
     // }
 
     // nextjid = DijkstraAlgorithm(cjid, m_rsujid);
-    int max=0;
+    double max=0;
     // for(int i=0;i<m_JuncNum;i++)
     // {
     //     if(isAdjacentVex(i,m_currentJID))
@@ -1680,21 +1688,23 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
         double dj=abs(nextjx-djx)+abs(nextjy-djy);
         double di=abs(njx-djx)+abs(njy-djy);
         double temp;
+        //ffout<<Simulator::Now()<<" "<<1-dj/di<<" "<<i->first<<" "<<m_currentJID<<" "<<scores[i->first][m_currentJID]<<std::endl;
         if(scores[i->first][m_currentJID]==0)
         {
-            temp=(1-dj/di);
+            temp=(1-dj/di)*2;
         }
         else{
-            temp=b1*(1-dj/di)+b2*scores[i->first][m_currentJID];
+            temp=b1*(1-dj/di)*2+b2*scores[i->first][m_currentJID];
         }
-        
+        //temp=b1*(1-dj/di)+b2*scores[i->first][m_currentJID];
        if(temp>max)
-        {std::cout<<1-dj/di<<" "<<scores[i->first][m_currentJID]<<std::endl;
+        {
             max=temp;
             nextjid=i->first;
+             //ffout<<1-dj/di<<" "<<i->first<<" "<<scores[i->first][m_currentJID]<<std::endl;
         }
     }
-
+    //ffout<<std::endl;
     return nextjid;
 }
 

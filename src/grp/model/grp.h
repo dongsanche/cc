@@ -191,6 +191,7 @@ private:
 
     TracedCallback <const Ipv4Header &> m_DropPacketTrace;
     TracedCallback <const Ipv4Header &> m_StorePacketTrace;
+    TracedCallback <const Ipv4Header &> m_sumPacketTrace;
 
 
     inline uint16_t GetPacketSequenceNumber ();
@@ -244,8 +245,8 @@ private:
      double a1=10;
      double a2=10;
      double a3=10;
-     double Ncon=6;
-     double T=300000;
+     double Ncon=4;
+     double T=200000;
      double Tmax=0.006;
      double C=2*Tmax;
      double b1=0.5;

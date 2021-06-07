@@ -347,8 +347,9 @@ DropPacket (Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Head
 }
 
 void
-sumpacket ( )
+sumpacket ( Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Header &header)
 {
+    std::cout<<"ssss"<<std::endl;
 	sumcount++;
 }
 
@@ -553,7 +554,7 @@ int main (int argc, char *argv[])
     Ptr<OutputStreamWrapper> stream = ascii.CreateFileStream ("scratch/grp-trace.tr");
     Config::Connect("/NodeList/*/$ns3::grp::RoutingProtocol/DropPacket", MakeBoundCallback(&DropPacket, stream));
     Config::Connect("/NodeList/*/$ns3::grp::RoutingProtocol/StorePacket", MakeBoundCallback(&StorePacket, stream));
-    //Config::Connect("/NodeList/*/$ns3::grp::RoutingProtocol/sumpacket", MakeBoundCallback(&sumpacket));
+    Config::Connect("/NodeList/*/$ns3::grp::RoutingProtocol/sumpacket", MakeBoundCallback(&sumpacket,stream));
 
     // 记录网络运行数据，可以使用NetAnim查看这些数据 
     AnimationInterface anim ("scratch/myvanet.xml");
@@ -586,7 +587,7 @@ int main (int argc, char *argv[])
     //将统计数据输出到文件中c
     std::ofstream fout("scratch/range.csv", std::ios::app);
 	fout <<idx <<","<<nNodes << "," << DistanceRange << "," << hops << "," << CarryTimeThreshold << "     ";
-    fout << "receive:"<<(recount * 1.0 / SendCount) << "  "<<"delay:" << (double)allTime/recount/1000000<<" "<<sum<<endl;
+    fout << "receive:"<<","<<(recount * 1.0 / SendCount) << ","<<"delay:" << ","<<(double)allTime/recount/1000000<<","<<sum<<endl;
     //fout << std::endl;
     fout.close();
     std::ofstream ffout("scratch/c.txt", std::ios::app);
