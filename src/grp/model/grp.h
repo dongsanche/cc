@@ -22,8 +22,8 @@
 #include "ns3/digitalMap.h"
 #include "ns3/myserver.h"
 
-// extern double scores[49][49];
-// extern double lifetime[49][49];
+// extern double scores[54][54];
+// extern double lifetime[54][54];
 namespace ns3 {
 
 struct PacketQueueEntry
@@ -199,11 +199,11 @@ private:
 
 /*------------------------------------------------------------------------------------------*/
     //以下参数需要根据实际运行情况调整
-    bool m_jqueuetag[49];
-    int m_JuncNum=49;
-    int m_rsujid = 45;
-    Ipv4Address m_rsuip=Ipv4Address("10.1.2.89");
-    double startTime = 5;
+    bool m_jqueuetag[54];
+    int m_JuncNum=54;
+    int m_rsujid = 36;
+    Ipv4Address m_rsuip=Ipv4Address("10.1.0.37");
+    double startTime = 0;
     double OutsightTransRange = 100;
     double RoadLength = 500;
     double turnLightRange = 50;
@@ -246,11 +246,11 @@ private:
      double a2=10;
      double a3=10;
      double Ncon=4;
-     double T=200000;
+     double T=100000;
      double Tmax=0.006;
      double C=2*Tmax;
      double b1=0.5;
-     double b2=0.5;
+     double b2=0;
 
 
 
@@ -258,14 +258,14 @@ private:
 
     int cp_currentJID=-1;
     int cp_nextJID=-1;
-    //double lifetime[49][49]={INT32_MAX}; //生存时间
+    //double lifetime[54][54]={INT32_MAX}; //生存时间
     // int NTOTAL=0;  //总车辆数
     // int NH=0;       //总跳数
-    //double scores[49][49];  //路段得分
+    //double scores[54][54];  //路段得分
     int cp_hop;       //跳数
     int64_t cp_time;      //初始时间
-    double scores[49][49]={0};
-    double lifetime[49][49];
+    double scores[54][54]={0};
+    double lifetime[54][54]={0};
     
 /*------------------------------------------------------------------------------------------*/
     //从配置文件读取实验运行参数

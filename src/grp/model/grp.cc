@@ -274,8 +274,8 @@ void RoutingProtocol::DoInitialize ()
     }
 
 	DigitalMap map;
-	std::string mapfile = "TestScenaries/" + std::to_string(vnum) + "/6x6_map.csv";
-    std::string tracefile = "TestScenaries/" + std::to_string(vnum) + "/6x6_vtrace.csv";
+    std::string tracefile = "TestScenaries/hefei/hefei_vtrace.csv";
+    std::string mapfile = "TestScenaries/hefei/hefei_map.csv";
 	map.setMapFilePath(mapfile);
 	map.readMapFromCsv(m_map);
 	map.readTraceCsv(tracefile, m_tracelist);
@@ -756,7 +756,7 @@ RoutingProtocol::RSE(const grp::MessageHeader &msg)
         Qab=a1+a2*T*NH/(now.GetNanoSeconds() -cp.GetVTime())+a3*(2/NH);
     scores[cp.GetFJID()][cp.GetTJID()]=Qab/30;
     scores[cp.GetTJID()][cp.GetFJID()]=scores[cp.GetFJID()][cp.GetTJID()];
-    //fout<<Qab/30<<" "<<temp<<" "<<(now.GetNanoSeconds()-cp.GetVTime())/NH<<" "<<NTOTAL<<" "<<NH<<" "<<" "<<lifetime[cp.GetFJID()][cp.GetTJID()]<<" "<<now.GetSeconds()<<std::endl;
+    fout<<Qab/30<<" "<<temp<<" "<<(now.GetNanoSeconds()-cp.GetVTime())/NH<<" "<<NTOTAL<<" "<<NH<<" "<<" "<<lifetime[cp.GetFJID()][cp.GetTJID()]<<" "<<now.GetSeconds()<<std::endl;
     //fout<<NH<<" "<<T*NH<<"   "<<now.GetNanoSeconds() -cp.GetVTime()<<std::endl;
     SendCP(Qab/30*1000,lifetime[cp.GetTJID()][cp.GetFJID()],m_id,cp.GetFJID(),cp.GetTJID(),-2);
     int next=AddrToID(IntraPathRouting(m_rsuip,cp.GetFJID()));
@@ -837,7 +837,7 @@ RoutingProtocol:: VPC(int next,int sjid)
     {
         if(itr->second.N_turn==next)
         {
-            t=InsightTransRange/m_speed;
+            t=InsightTransRange/m_speed/3.6;
         }
         else
         {
@@ -1209,6 +1209,7 @@ RoutingProtocol::CpTimerExpire ()
                 {
                     cp_time=Simulator::Now().GetNanoSeconds();
                     Ipv4Address next=IntraPathRouting(m_rsuip,m_lastjid);
+                    //std::cout<<idtoaddr(36)<<std::endl;
                     if(next=="127.0.0.1")
                         return;
                     SendCP(1,cp_time,m_id,m_lastjid,m_currentJID,AddrToID(next));
@@ -1559,9 +1560,10 @@ RoutingProtocol::DijkstraAlgorithm(int srcjid, int dstjid)
 
     int curr = srcjid;
     int next = -1;
+    double min = INF;
     for(int count = 1; curr >= 0 && count <= m_JuncNum; count++)
     {
-        double min = INF;
+        min=INF;
         for(int n = 0; n < m_JuncNum; n++)
         {
             if(visited[n] == false)
@@ -1575,6 +1577,7 @@ RoutingProtocol::DijkstraAlgorithm(int srcjid, int dstjid)
                 if(distance[n] < min)
                 {
                     min = distance[n];
+                    //std::cout<<min<<std::endl;
                     next = n;
                 }
             }
@@ -1590,8 +1593,8 @@ RoutingProtocol::DijkstraAlgorithm(int srcjid, int dstjid)
             break;
         jid = parent[jid];
     }
-
-    return jid; 
+    //std::cout<<distance[dstjid]<<std::endl;
+    return distance[dstjid]; 
 }
 
 
@@ -1639,20 +1642,21 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
 
     int nextjid = -1;
 
-    // for(int i = 0; i < m_JuncNum; i++)
-    // {
-    //     for(int j = i + 1; j < m_JuncNum; j++)
-    //     {
-    //         if(isAdjacentVex(i, j) == false)
-    //         {
-    //             Graph[i][j] = Graph[j][i] = INF;
-    //         }
-    //         else
-    //         {
-    //             Graph[i][j] = Graph[j][i] = 1;
-    //         }
-    //     }
-    // }
+    for(int i = 0; i < m_JuncNum; i++)
+    {
+        for(int j = i + 1; j < m_JuncNum; j++)
+        {
+            if(isAdjacentVex(i, j) == false)
+            {
+                Graph[i][j] = Graph[j][i] = INF;
+            }
+            else
+            {
+                Graph[i][j] = Graph[j][i] = m_map[i].outedge[j][1];
+                //std::cout<<m_map[i].outedge[j][1]<<std::endl;
+            }
+        }
+    }
 
     // nextjid = DijkstraAlgorithm(cjid, m_rsujid);
     double max=0;
@@ -1677,30 +1681,37 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
         {
             continue;
         }
-        double nextjx=m_map[i->first].x;
-        double nextjy=m_map[i->first].y;
-        double djx=m_map[m_rsujid].x;
-        double djy=m_map[m_rsujid].y;
-        double njx=m_map[m_currentJID].x;
-        double njy=m_map[m_currentJID].y;
+        // double nextjx=m_map[i->first].x;
+        // double nextjy=m_map[i->first].y;
+        // double djx=m_map[m_rsujid].x;
+        // double djy=m_map[m_rsujid].y;
+        // double njx=m_map[m_currentJID].x;
+        // double njy=m_map[m_currentJID].y;
         // double dj=pow(nextjx-djx, 2)+pow(nextjy-djy, 2);
         // double di=pow(njx-djx, 2)+pow(njy-djy, 2);
-        double dj=abs(nextjx-djx)+abs(nextjy-djy);
-        double di=abs(njx-djx)+abs(njy-djy);
+        // double dj=abs(nextjx-djx)+abs(nextjy-djy);
+        // double di=abs(njx-djx)+abs(njy-djy);
+        double dj=DijkstraAlgorithm(i->first,m_rsujid);
+        double di=DijkstraAlgorithm(m_currentJID,m_rsujid);
         double temp;
-        //ffout<<Simulator::Now()<<" "<<1-dj/di<<" "<<i->first<<" "<<m_currentJID<<" "<<scores[i->first][m_currentJID]<<std::endl;
+        std::cout<<dj<<" "<<di<<std::endl;
+        
+        if(di==0)
+        {
+            return i->first;
+        }
         if(scores[i->first][m_currentJID]==0)
         {
-            temp=(1-dj/di)*2;
+            temp=(1-dj/di);
         }
         else{
-            temp=b1*(1-dj/di)*2+b2*scores[i->first][m_currentJID];
+            temp=b1*(1-dj/di)+b2*scores[i->first][m_currentJID];
         }
         //temp=b1*(1-dj/di)+b2*scores[i->first][m_currentJID];
        if(temp>max)
         {
             max=temp;
-            nextjid=i->first;
+            nextjid=i->first;ffout<<Simulator::Now()<<" "<<1-dj/di<<" "<<scores[i->first][m_currentJID]<<std::endl;
              //ffout<<1-dj/di<<" "<<i->first<<" "<<scores[i->first][m_currentJID]<<std::endl;
         }
     }
@@ -1873,7 +1884,6 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
                                    LocalDeliverCallback lcb, ErrorCallback ecb)
 {
 	NS_LOG_FUNCTION (this << " " << m_ipv4->GetObject<Node> ()->GetId () << " " << header.GetDestination ());
-
 	Ipv4Address dest = header.GetDestination ();
     Ipv4Address origin = header.GetSource ();
     m_rsuip=dest;

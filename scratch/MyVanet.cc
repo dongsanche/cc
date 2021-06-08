@@ -349,7 +349,7 @@ DropPacket (Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Head
 void
 sumpacket ( Ptr<OutputStreamWrapper> stream, std::string context, const Ipv4Header &header)
 {
-    std::cout<<"ssss"<<std::endl;
+    //std::cout<<"ssss"<<std::endl;
 	sumcount++;
 }
 
@@ -455,12 +455,13 @@ int main (int argc, char *argv[])
 
 /*---------------------------------为节点配置移动性----------------------------------*/
     //根据配置参数设置车辆数据
-    std::string m_traceFile = "TestScenaries/" + std::to_string(nNodes) + "/6x6_" + std::to_string(nNodes) + ".tcl";
-    std::string mapfile = "TestScenaries/" + std::to_string(nNodes) + "/6x6_map.csv";
+    std::string m_traceFile = "TestScenaries/hefei/hefei.tcl";
+    std::string mapfile = "TestScenaries/hefei/hefei_map.csv";
+
+    
     
     //设置Sink的位置
-    Vector ServerPos(1900, 600, 0);
-
+    Vector ServerPos(1931.07, 1759.21, 0);
     //configure vehicle's mobility
     Ns2MobilityHelper ns2 = Ns2MobilityHelper (m_traceFile);
     ns2.Install(NodeList::Begin (), NodeList::End ()-1);
