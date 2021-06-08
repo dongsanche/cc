@@ -244,12 +244,12 @@ private:
      double a1=10;
      double a2=10;
      double a3=10;
-     double Ncon=6;
-     double T=300000;
+     double Ncon=4;
+     double T=20000;
      double Tmax=0.006;
      double C=2*Tmax;
      double b1=0.5;
-     double b2=0.5;
+     double b2=0;
 
 
 
@@ -264,7 +264,7 @@ private:
     int cp_hop;       //跳数
     int64_t cp_time;      //初始时间
     double scores[54][54]={0};
-    double lifetime[54][54];
+    double lifetime[54][54]={0};
     
 /*------------------------------------------------------------------------------------------*/
     //从配置文件读取实验运行参数
