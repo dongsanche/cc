@@ -1696,7 +1696,7 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
         double temp;
         std::cout<<dj<<" "<<di<<std::endl;
         
-        if(di==0)
+        if(dj==0)
         {
             return i->first;
         }
