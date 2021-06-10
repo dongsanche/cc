@@ -201,8 +201,8 @@ private:
     //以下参数需要根据实际运行情况调整
     bool m_jqueuetag[54];
     int m_JuncNum=54;
-    int m_rsujid = 36;
-    Ipv4Address m_rsuip=Ipv4Address("10.1.0.37");
+    int m_rsujid = 52;
+    Ipv4Address m_rsuip=Ipv4Address("10.1.0.53");
     double startTime = 0;
     double OutsightTransRange = 100;
     double RoadLength = 500;
@@ -246,7 +246,7 @@ private:
      double a2=10;
      double a3=10;
      double Ncon=4;
-     double T=100000;
+     double T=80000;
      double Tmax=0.006;
      double C=2*Tmax;
      double b1=1;

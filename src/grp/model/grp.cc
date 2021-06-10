@@ -759,7 +759,7 @@ RoutingProtocol::RSE(const grp::MessageHeader &msg)
         Qab=a1+a2*T*NH/(now.GetNanoSeconds() -cp.GetVTime())+a3*(2/NH);
     scores[cp.GetFJID()][cp.GetTJID()]=Qab/30;
     scores[cp.GetTJID()][cp.GetFJID()]=scores[cp.GetFJID()][cp.GetTJID()];
-    fout<<Qab/30<<" "<<temp<<" "<<(now.GetNanoSeconds()-cp.GetVTime())/NH<<" "<<NTOTAL<<" "<<NH<<" "<<" "<<lifetime[cp.GetFJID()][cp.GetTJID()]<<" "<<now.GetSeconds()<<std::endl;
+    // fout<<Qab/30<<" "<<temp<<" "<<(now.GetNanoSeconds()-cp.GetVTime())/NH<<" "<<NTOTAL<<" "<<NH<<" "<<" "<<lifetime[cp.GetFJID()][cp.GetTJID()]<<" "<<now.GetSeconds()<<std::endl;
     //fout<<NH<<" "<<T*NH<<"   "<<now.GetNanoSeconds() -cp.GetVTime()<<std::endl;
     SendCP(Qab/30*10000,lifetime[cp.GetTJID()][cp.GetFJID()],m_id,cp.GetFJID(),cp.GetTJID(),-2);
     int next=AddrToID(IntraPathRouting(m_rsuip,cp.GetFJID()));
@@ -1714,7 +1714,7 @@ RoutingProtocol::GetPacketNextJID(int lastjid)
             
             max=temp;
             nextjid=i->first;
-            ffout<<Simulator::Now()<<" "<<1-dj/di<<" "<<scores[i->first][m_currentJID]<<std::endl;
+            // ffout<<Simulator::Now()<<" "<<1-dj/di<<" "<<scores[i->first][m_currentJID]<<std::endl;
              //ffout<<1-dj/di<<" "<<i->first<<" "<<scores[i->first][m_currentJID]<<std::endl;
         }
     }

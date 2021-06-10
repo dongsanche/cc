@@ -177,8 +177,8 @@ void SendTestPacketToLC_DIS()
 	Address SinkAddress = InetSocketAddress(NodeList().GetNode(sinkID)->GetObject<Ipv4>()->GetAddress (1, 0).GetLocal (), sinkPort);
 
 	// srcID = srclist[srcidx++];
-    double dx = 1900;
-    double dy = 600;
+    double dx = 117.43;
+    double dy = 3168.44;
     double vx = 0, vy = 0, dis = DistanceRange;
     while(dis >= DistanceRange)
     {
@@ -461,7 +461,7 @@ int main (int argc, char *argv[])
     
     
     //设置Sink的位置
-    Vector ServerPos(1931.07, 1759.21, 0);
+    Vector ServerPos(117.43, 3168.44, 0);
     //configure vehicle's mobility
     Ns2MobilityHelper ns2 = Ns2MobilityHelper (m_traceFile);
     ns2.Install(NodeList::Begin (), NodeList::End ()-1);
