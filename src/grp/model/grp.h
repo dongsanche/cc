@@ -332,7 +332,7 @@ private:
     void RecvGrp (Ptr<Socket> socket);
 
     //CP机制处理逻辑
-    void SendCP (double hop,int64_t t,int sid,int njid,int sjid,int nhop);
+    void SendCP (double hop,int64_t t,int sid,int njid,int sjid,int nhop,int tnv);
     void ProcessCP (const grp::MessageHeader &msg, const Ipv4Address receiverIfaceAddr, const Ipv4Address senderIface);
     
     //Beacon机制处理逻辑

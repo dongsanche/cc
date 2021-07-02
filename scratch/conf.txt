@@ -1,7 +1,7 @@
-idx=9
+idx=0
 vnum=600
 range=250
 seghop=2
 enable-etar=true
 CarryTimeThreshold=20
-DistanceRange=3500
+DistanceRange=4000
